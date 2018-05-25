@@ -470,6 +470,7 @@ void CMainCtrlDlg::OnTimer(UINT_PTR nIDEvent)
 			KillTimer(nIDEvent);
 		}else
 			num--;
+
 		break;
 	case 1:
 		break;
