@@ -255,7 +255,7 @@ BOOL CPLCModbus::SetPower(FLOAT nWidth, UINT nIndex)
 UINT CPLCModbus::GetLaserPressure(UINT nIndex)
 {
 	USHORT arg(0);
-	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 1000 , &arg))//DM1000
+	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 414 , &arg))//DM1000
 		return FALSE;
 	return arg;
 
@@ -264,7 +264,7 @@ UINT CPLCModbus::GetLaserPressure(UINT nIndex)
 BOOL CPLCModbus::SetLaserPressure(UINT nNumber, UINT nIndex)
 {
 	USHORT arg(nNumber);
-	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 411 , &arg, 1, WRIT))//DM411
+	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 414 , &arg, 1, WRIT))//DM411
 		return FALSE;
 	return TRUE;
 

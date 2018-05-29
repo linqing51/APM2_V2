@@ -256,6 +256,8 @@ LRESULT CMainFrame::OnShowResults(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 LRESULT CMainFrame::OnShowTestResults(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 {
 	CString info(_T("出球测试准备中"));
+	double dtime;
+	float fval;
 	Point pt = {240, 60 };
 	Image*  TempCanvas = imaqCreateImage(IMAQ_IMAGE_U8, 2);
 	switch (wParam)
@@ -264,7 +266,11 @@ LRESULT CMainFrame::OnShowTestResults(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0
 		break;
 	case 1:
 		if (lParam)
-			info.Format(_T("测试量：%d次,耗时：%.0f ms，平均%.0f ms"), lParam,theApp.m_StopWatch.GetAverageTime() / 1000.0, theApp.m_StopWatch.GetTimeSpan() / 1000.0);
+		{
+			dtime = theApp.m_StopWatch.GetAverageTime() / 1000;
+			fval = lParam ? dtime / lParam : 0;
+			info.Format(_T("测试量：%d次,耗时：%.0f ms，平均%.0f ms"), lParam, dtime, fval);
+		}
 		else
 			info.Format(_T("出球测试中，打球间隔%.0f ms"), theApp.m_StopWatch.GetTimeSpan() / 1000);
 		break;
@@ -3421,6 +3427,7 @@ UINT _cdecl CMainFrame::ManualRunThread(LPVOID lpParam)
 		case 8://测试打球
 			pFrame->m_nCurrentRunMode = 0x03;
 			theApp.m_StopWatch.Start();
+			theApp.m_StopWatch.Reset();
 			theApp.m_StopWatch.GetTimeSpan();
 			for (i = 0; i < pFrame->m_pDoc->m_cParam.PrjCfg.nTestBallNumber;i++)
 			{
