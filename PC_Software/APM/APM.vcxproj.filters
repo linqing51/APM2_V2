@@ -87,6 +87,9 @@
     <ClInclude Include="WaiteProcessDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="LogHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="APM.cpp">
@@ -171,6 +174,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="WaiteProcessDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LogHelper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

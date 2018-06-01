@@ -153,6 +153,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -219,6 +220,7 @@
     <ClInclude Include="IOControl.h" />
     <ClInclude Include="IOStatusDlg.h" />
     <ClInclude Include="LaserSettingDlg.h" />
+    <ClInclude Include="LogHelper.h" />
     <ClInclude Include="LoginDlg.h" />
     <ClInclude Include="MainCtrlDlg.h" />
     <ClInclude Include="MainFrm.h" />
@@ -256,6 +258,7 @@
     <ClCompile Include="IOControl.cpp" />
     <ClCompile Include="IOStatusDlg.cpp" />
     <ClCompile Include="LaserSettingDlg.cpp" />
+    <ClCompile Include="LogHelper.cpp" />
     <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MainCtrlDlg.cpp" />
     <ClCompile Include="MainFrm.cpp" />

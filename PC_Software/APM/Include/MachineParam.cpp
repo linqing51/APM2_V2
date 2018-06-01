@@ -84,6 +84,10 @@ CMachineParam::CMachineParam()
 	DefaultProjectName = _T("DEFAULTS");
 	PrjCfg.Magic[0] = 12345678;
 	PrjCfg.Magic[1] = 87654321;
+	nBondHomeTime = 60;
+	nDroppingTime[0] = 1000;
+	nDroppingTime[1] = 100;
+
 	nLaserSpan = 500;
 }
 
@@ -120,8 +124,17 @@ BOOL CMachineParam::LoadParameter(CString strFileName,BOOL bLoadSave)
 		nNozzleLife[1] = m_nFileIni.GetInt(_T("Nozzle Total Life"));
 		BallAlarmNum = m_nFileIni.GetInt(_T("Ball Supply Alarm"));
 		nLaserSpan = m_nFileIni.GetInt(_T("打球间隔时间"));
+		nBondHomeTime = m_nFileIni.GetInt(_T("碟片复位等待时间"));
+		nDroppingTime[0] = m_nFileIni.GetInt(_T("落球等待时间"));
+		nDroppingTime[1] = m_nFileIni.GetInt(_T("降压等待时间"));
 		if (nLaserSpan > 5000 || !nLaserSpan)
 			nLaserSpan = 500;
+		if (nBondHomeTime > 300 || !nBondHomeTime)
+			nBondHomeTime = 60;
+		if (nDroppingTime[0] > 5000 || !nDroppingTime[0])
+			nDroppingTime[0] = 500;
+		if (nDroppingTime[1] > 1000 || !nDroppingTime[1])
+			nDroppingTime[1] = 100;
 		for (i = 0; i < 8; ++i)
 		{
 			str.Format(_T("Home_Vel_%c"), 65 + i);
@@ -187,6 +200,9 @@ BOOL CMachineParam::LoadParameter(CString strFileName,BOOL bLoadSave)
 		m_nFileIni.SetValue(nNozzleLife[1],_T("Nozzle Total Life"));
 		m_nFileIni.SetValue(BallAlarmNum, _T("Ball Supply Alarm"));
 		m_nFileIni.SetValue(nLaserSpan, _T("打球间隔时间"));
+		m_nFileIni.SetValue(nBondHomeTime, _T("碟片复位等待时间"));
+		m_nFileIni.SetValue(nDroppingTime[0], _T("落球等待时间"));
+		m_nFileIni.SetValue(nDroppingTime[1], _T("降压等待时间"));
 
 		for (i = 0; i < 8; i++)
 		{

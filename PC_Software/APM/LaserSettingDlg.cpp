@@ -27,7 +27,7 @@ void CLaserSettingDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CBCGPDialog::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_EDIT_POWER, fPower);
-	DDX_Text(pDX, IDC_EDIT_PRESSURE, nLaserPressure);
+	DDX_Text(pDX, IDC_EDIT_PRESSURE, fLaserPressure);
 	DDX_Text(pDX, IDC_EDIT_BALL_PRESSURE_UP, nBallPressure[0]);
 
 	DDX_Text(pDX, IDC_EDIT_BALL_PRESSURE_LOW, nBallPressure[1]);
@@ -37,6 +37,8 @@ void CLaserSettingDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_N2_READY, m_bN2Ready);
 	DDX_Check(pDX, IDC_CHECK_BOND_READY, m_bDiscReady);
 	DDX_Text(pDX, IDC_EDIT_TESTMODE_BALLNUM, m_nTestBall);
+	DDV_MinMaxFloat(pDX, fPower, 0.1, 100);
+	DDV_MinMaxFloat(pDX, fLaserPressure, 0.1, 100);
 }
 
 
@@ -92,7 +94,7 @@ LRESULT CLaserSettingDlg::OnUpdateDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0
 		break;
 	case 2:
 		fPower = pFrame->m_pDoc->m_cParam.PrjCfg.fLaserPower;
-		nLaserPressure = pFrame->m_pDoc->m_cParam.PrjCfg.uLaserPressure;
+		fLaserPressure = pFrame->m_pDoc->m_cParam.PrjCfg.uLaserPressure/10.0;
 		nBallPressure[0] = pFrame->m_pDoc->m_cParam.PrjCfg.uDetectPressure[0];
 		nBallPressure[1] = pFrame->m_pDoc->m_cParam.PrjCfg.uDetectPressure[1];
 
@@ -118,7 +120,7 @@ BOOL CLaserSettingDlg::OnBnClickedTransfer(BOOL bDownload)
 	if (bDownload)
 	{
 		UpdateData(TRUE);
-		if (pFrame->m_LaserCtrl.SetConfigList(fPower, nLaserPressure, nBallPressure[0], nBallPressure[1])&&pFrame->m_LaserCtrl.SetCleanPower(fCleanPower))
+		if (pFrame->m_LaserCtrl.SetConfigList(fPower, fLaserPressure, nBallPressure[0], nBallPressure[1]) && pFrame->m_LaserCtrl.SetCleanPower(fCleanPower))
 		{
 			GetDlgItem(IDC_BUTTON_APPLY)->EnableWindow(FALSE);
 			SetTimer(2, 1000,NULL);
@@ -128,7 +130,7 @@ BOOL CLaserSettingDlg::OnBnClickedTransfer(BOOL bDownload)
 	}
 	else
 	{
-		if (!pFrame->m_LaserCtrl.GetConfigList(fPower, nLaserPressure,
+		if (!pFrame->m_LaserCtrl.GetConfigList(fPower, fLaserPressure,
 			nBallPressure[0], nBallPressure[1]) || !pFrame->m_LaserCtrl.GetCleanPower(fCleanPower))
 		{
 			pFrame->AddedErrorMsg(_T("从PLC获取出光参数失败\r\n"));
@@ -151,11 +153,26 @@ void CLaserSettingDlg::OnBnClickedButtonBoundHome()
 	// TODO:  在此添加控件通知处理程序代码
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
 	int i(0);
-	pFrame->m_IoCtrller.WriteOutputByBit(pFrame->m_pDoc->m_cParam.Ou_Welding[0], FALSE);
-	pFrame->m_IoCtrller.WriteOutputByBit(pFrame->m_pDoc->m_cParam.Ou_Welding[1], TRUE);
-	GetDlgItem(IDC_BUTTON_BOUND_HOME)->EnableWindow(FALSE);
-	SetTimer(0, 200, NULL);
-	SetTimer(1, 800, NULL);
+	if (!pFrame->m_LaserCtrl.GetPLCRDY())
+	{
+		pFrame->AddedErrorMsg(_T("PLC 未准备好\r\n"));
+		return ;
+	}
+	pFrame->m_LaserCtrl.SetbondServoRDY();
+	if (pFrame->m_LaserCtrl.IsHomed())
+	{
+		if (IDNO == MessageBox(_T("碟片当前状态回零已完成,需要重新回零吗?"), _T("提示"), MB_YESNO))
+			return;
+	}
+	if (!pFrame->m_LaserCtrl.IsHoming())
+	{
+		pFrame->m_nCurrentRunMode = 0x01;
+		pFrame->m_IoCtrller.WriteOutputByBit(pFrame->m_pDoc->m_cParam.Ou_Welding[0], FALSE);
+		pFrame->m_IoCtrller.WriteOutputByBit(pFrame->m_pDoc->m_cParam.Ou_Welding[1], TRUE);
+		GetDlgItem(IDC_BUTTON_BOUND_HOME)->EnableWindow(FALSE);
+		SetTimer(0, 200, NULL);
+		SetTimer(1, 800, NULL);
+	}
 }
 
 
@@ -178,6 +195,11 @@ void CLaserSettingDlg::OnBnClickedCheckLaserReady(UINT idCtl)
 
 		break;
 	case IDC_CHECK_BOND_READY:
+		if (!pFrame->m_LaserCtrl.GetPLCRDY())
+		{
+			pFrame->AddedErrorMsg(_T("PLC 未准备好\r\n"));
+			return ;
+		}
 		str_msg.Format(_T("确定%s碟片电机?"), str[!m_bDiscReady]);
 		if (IDYES == MessageBox(str_msg, _T("重要提示"), MB_YESNO))
 		{
@@ -202,9 +224,14 @@ void CLaserSettingDlg::OnBnClickedButtonApply()
 		pFrame->m_pDoc->m_cParam.PrjCfg.nTestBallNumber = m_nTestBall;
 		pFrame->m_pDoc->m_cParam.PrjCfg.fLaserPower = fPower;
 		pFrame->m_pDoc->m_cParam.PrjCfg.fCleanPower = fCleanPower;
-		pFrame->m_pDoc->m_cParam.PrjCfg.uLaserPressure = nLaserPressure;
+		pFrame->m_pDoc->m_cParam.PrjCfg.uLaserPressure = fLaserPressure*10;
 		pFrame->m_pDoc->m_cParam.PrjCfg.uDetectPressure[0] = nBallPressure[0];
 		pFrame->m_pDoc->m_cParam.PrjCfg.uDetectPressure[1] = nBallPressure[1];
+		if (!pFrame->m_LaserCtrl.GetPLCRDY())
+		{
+			pFrame->AddedErrorMsg(_T("PLC 未准备好\r\n"));
+			return ;
+		}
 		OnBnClickedTransfer(TRUE);
 	}
 }
@@ -219,6 +246,7 @@ void CLaserSettingDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO:  在此添加消息处理程序代码和/或调用默认值
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
+	static int num(100);
 	switch (nIDEvent)
 	{
 	case 0:
@@ -226,11 +254,19 @@ void CLaserSettingDlg::OnTimer(UINT_PTR nIDEvent)
 		KillTimer(nIDEvent);
 		break;
 	case 1:
-		if (::WaitForSingleObject(pFrame->m_hBondHomeEnd, 0) == WAIT_OBJECT_0)
+		if (!num || ::WaitForSingleObject(pFrame->m_hBondHomeEnd, 0) == WAIT_OBJECT_0)
 		{
 			GetDlgItem(IDC_BUTTON_BOUND_HOME)->EnableWindow(TRUE);
+			if (::WaitForSingleObject(pFrame->m_hBondHomeEnd, 0) == WAIT_OBJECT_0)
+				pFrame->AddedErrorMsg(_T("碟片手动回零动作超时\r\n"));
+
+			pFrame->m_nCurrentRunMode = 0x0;
+			num = 100;
 			KillTimer(nIDEvent);
 		}
+		else
+			num--;
+
 		break;
 	case 2:
 		OnBnClickedTransfer(FALSE);

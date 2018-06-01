@@ -425,6 +425,7 @@ DWORD WINAPI CSerialPort::CommThread(LPVOID pParam)
 		} // end switch
 
 	} // close forever loop
+	port->m_bThreadAlive = FALSE;
 
 	return 0;
 }

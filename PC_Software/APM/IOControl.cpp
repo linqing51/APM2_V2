@@ -178,6 +178,7 @@ int CIOControl::InitCard(int CardType,int cardnum)
 	m_hEventArray[1]=m_hScan;
 	InitEvent();
 	m_bInit = TRUE;
+	WriteOutputByPort(0, 0, m_instantDoCtrl->getPortCount());
 	return m_bInit;
 }
 

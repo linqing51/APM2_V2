@@ -27,6 +27,7 @@ public:
 	BOOL IsHomed();
 	BOOL SetbondServoRDY(BOOL bEnable = TRUE);
 	BOOL GetLaserRDY();
+	BOOL GetPLCRDY();
 	BOOL SetLaserRDY(BOOL bEnable = TRUE);
 
 
@@ -42,14 +43,16 @@ public:
 
 	FLOAT GetPowerTime(UINT nIndex = 0);
 	BOOL SetPowerTime(FLOAT ftime, UINT nIndex = 0);
-	UINT GetLaserPressure(UINT nIndex=0);
+	UINT GetDroppingTime(UINT nIndex = 0);
+	BOOL SetDroppingTime(UINT ntime, UINT nIndex = 0);
+	UINT GetLaserPressure(UINT nIndex = 0);
 	BOOL SetLaserPressure(UINT nNumber, UINT nIndex=0);
 
 	UINT GetDetectPressure(UINT nIndex);
 	BOOL SetDetectPressure(UINT nNumber,UINT nIndex=0 );
 
-	BOOL GetConfigList(FLOAT& nPower, UINT& Pressure, UINT& ndetect_up, UINT& ndetect_low);//410-418
-	BOOL SetConfigList(FLOAT nPower, UINT Pressure, UINT ndetect_up, UINT ndetect_low);//410-418
+	BOOL GetConfigList(FLOAT& nPower, FLOAT& Pressure, UINT& ndetect_up, UINT& ndetect_low);//410-418
+	BOOL SetConfigList(FLOAT nPower, FLOAT Pressure, UINT ndetect_up, UINT ndetect_low);//410-418
 	/*
 	//¹ýÊ±
 	BOOL GetTestModeSts();

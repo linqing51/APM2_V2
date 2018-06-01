@@ -54,7 +54,7 @@ CAPMApp theApp;
 BOOL CAPMApp::InitInstance()
 {
 	HANDLE hMutex = CreateMutex(NULL, TRUE, m_pszAppName);
-	if (GetLastError() == ERROR_ALREADY_EXISTS) { return FALSE; }
+	if (GetLastError() == ERROR_ALREADY_EXISTS) { ::AfxMessageBox(_T("只允许运行一个程序,不可重复启动")); return FALSE; }
 
 	// 如果一个运行在 Windows XP 上的应用程序清单指定要
 	// 使用 ComCtl32.dll 版本 6 或更高版本来启用可视化方式，
@@ -152,7 +152,6 @@ int CAPMApp::ExitInstance()
 	CleanState();
 #endif
 	BCGCBProCleanUp();
-
 	return CBCGPWinApp::ExitInstance();
 }
 

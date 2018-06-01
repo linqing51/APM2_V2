@@ -234,8 +234,8 @@ LRESULT CMainFrame::OnShowResults(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 	static BYTE nCount(0);
 	static CString info(_T(""));
 	CString sz;
-	CString sts[2] = {_T("未找到") , _T("已找到") };
-	Point pt = { 20, 60 };
+	CString sts[2] = {_T("识别失败") , _T("识别成功") };
+	Point pt = { 20, 100 };
 	Image*  TempCanvas = imaqCreateImage(IMAQ_IMAGE_U8, 2);
 	BYTE num = wParam >> 4;
 	BYTE nIndex = wParam & 0x0f;
@@ -244,7 +244,7 @@ LRESULT CMainFrame::OnShowResults(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 		info = _T("");
 		nCount = 0;
 	}
-	sz.Format(_T("第%d 行焊点状态:%d %s\r\n"), num + 1, nIndex + 1, sts[lParam ? 1 : 0]);
+	sz.Format(_T("第%d个产品焊点:%d %s\r\n"), num + 1, nIndex + 1, sts[lParam ? 1 : 0]);
 	info += sz;
 	m_NiVision.DrawTextInfo(TempCanvas, info, pt, BASIC_INFO_LAYER,44);
 	m_NiVision.UpdateOverlay((UINT)0, TempCanvas, CMainFrame::BASIC_INFO_LAYER + 1);
@@ -586,7 +586,12 @@ void CMainFrame::OnOperationMode(UINT idCtl)
 		}
 		break;
 	case ID_OPERATION_LASERTEST:
-		if (m_nCurrentRunMode >> 2)
+		if (!m_LaserCtrl.GetPLCRDY())
+		{
+			AddedErrorMsg(_T("PLC 未准备好\r\n"));
+			return ;
+		}
+		if (m_nCurrentRunMode ==3)
 		{
 			m_LaserCtrl.SetLaserRDY(FALSE);
 			m_pStopRun->SetEvent();
@@ -734,8 +739,8 @@ void CMainFrame::OnUpdateCommand(CCmdUI *pCmdUI)
 		pCmdUI->Enable(m_nIsHomeEnd&&!m_nCurrentRunMode);
 		break;
 	case ID_OPERATION_LASERTEST:
-		pCmdUI->SetCheck(m_nCurrentRunMode>>2);
-		pCmdUI->Enable(m_nUserType&&!(m_nCurrentRunMode&0x03));
+		pCmdUI->SetCheck(m_nCurrentRunMode==3);
+		pCmdUI->Enable(!m_bIdling&&m_nUserType&&!(m_nCurrentRunMode & 0x03));
 
 		break;
 	case ID_VIEW_IO:  
@@ -898,7 +903,7 @@ BOOL CMainFrame::InitHardware()
 // 	*/
 	bSucces = SetHardWareRun(TRUE);
 	if (bSucces){
-		CString str[9] = { _T("IO卡启动扫描失败;"), _T("启动实时图像失败;"), _T("传送参数至PLC失败;"), _T("启动扫描PLC状态失败;"),
+		CString str[9] = { _T("IO卡启动扫描失败;"), _T("启动实时图像失败;"), _T("传送参数至PLC通讯失败;"), _T("启动扫描PLC状态失败;"),
 			_T("运动控制卡1初始化失败;"), _T("运动控制卡1初始化轴失败;"), _T("运动控制卡2初始化失败;"), _T("运动控制卡2初始化轴失败;"),
 			_T("") };
 		CString str_temp;
@@ -1008,20 +1013,30 @@ BOOL CMainFrame::SetHardWareRun(BOOL bEnable /*= TRUE*/)
 BOOL CMainFrame::DownPlcConf()
 {
 	BOOL bSuccess=!m_LaserCtrl.Openport();
+
 	if (!bSuccess)
 	{
-		if(!m_LaserCtrl.SetConfigList(m_pDoc->m_cParam.PrjCfg.fLaserPower, m_pDoc->m_cParam.PrjCfg.uLaserPressure,
-			m_pDoc->m_cParam.PrjCfg.uDetectPressure[0], m_pDoc->m_cParam.PrjCfg.uDetectPressure[1]))
-			bSuccess=1;
-		if(!m_LaserCtrl.SetNGBallNum(m_pDoc->m_cParam.BallAlarmNum))
-			bSuccess|=2;
-		if(!m_LaserCtrl.SetCleanPower(m_pDoc->m_cParam.PrjCfg.fCleanPower))
-			bSuccess|=4;
-		for (int i = 0; i < 16; i++)
+		if (m_LaserCtrl.GetPLCRDY())
 		{
-			if (!m_LaserCtrl.SetPowerTime(i, m_pDoc->m_cParam.PrjCfg.PinArray[i].uWeldingTimes & 0x0f))
-				bSuccess|=1<<(3+i);
+			if (!m_LaserCtrl.SetConfigList(m_pDoc->m_cParam.PrjCfg.fLaserPower, m_pDoc->m_cParam.PrjCfg.uLaserPressure / 10.0,
+				m_pDoc->m_cParam.PrjCfg.uDetectPressure[0], m_pDoc->m_cParam.PrjCfg.uDetectPressure[1]))
+				bSuccess = 1;
+			if (!m_LaserCtrl.SetNGBallNum(m_pDoc->m_cParam.BallAlarmNum))
+				bSuccess |= 2;
+			if (!m_LaserCtrl.SetCleanPower(m_pDoc->m_cParam.PrjCfg.fCleanPower))
+				bSuccess |= 4;
+			if (!m_LaserCtrl.SetDroppingTime(m_pDoc->m_cParam.nDroppingTime[0],0 ))
+				bSuccess |= 8;
+			if (!m_LaserCtrl.SetDroppingTime(m_pDoc->m_cParam.nDroppingTime[1],1 ))
+				bSuccess |= 0x010;
+			for (int i = 0; i < 16; i++)
+			{
+				if (!m_LaserCtrl.SetPowerTime(m_pDoc->m_cParam.PrjCfg.PinArray[i].uWeldingTimes /10.0, i))
+					bSuccess |= 1 << (5 + i);
+			}
 		}
+		else
+			bSuccess = 0xffff;
 	}
 	return bSuccess;
 }
@@ -1634,10 +1649,11 @@ UINT _cdecl CMainFrame::ImgProcessThread(LPVOID lpParam)
 	UINT nIndex = pOperateOrder->nIndex[3];
 	UINT nEventID = pOperateOrder->nIndex[4];
 	Image*  CurrentImg = (Image*)pOperateOrder->pData;
-	TRACE3(" ImageProcess ThreadEvent Start [LR<%d>:%d] - %d \r\n",nWp, nIndex, nEventID);
 	CString ErrMsg;
 	UINT i(0);
 	UINT nResult(0);
+// 	ErrMsg.Format(_T("第%d行%d列产品图像正在%d号处理资源进行处理"), nCurrent[0]+1,nCurrent[1]+1, nEventID+1);
+// 	CLogHelper::WriteLog(ErrMsg);
 	if (nEventID > 8)
 		return nResult;
 	if (CurrentImg!=NULL)
@@ -1662,8 +1678,9 @@ UINT _cdecl CMainFrame::ImgProcessThread(LPVOID lpParam)
 // 		}else
 // 			pFrame->ShowPopup(ErrMsg);
 	}
-	TRACE2(" ImageProcess ThreadEvent set free [LR%d] - %d \r\n", nIndex, nEventID);
-	SetEvent(pFrame->m_hImgProcessEvent[nEventID+1]);
+	ErrMsg.Format(_T("第%d行%d列产品图像已在%d号处理资源处理完毕，资源释放"), nCurrent[0] + 1, nCurrent[1] + 1, nEventID + 1);
+	CLogHelper::WriteLog(ErrMsg);
+	SetEvent(pFrame->m_hImgProcessEvent[nEventID + 1]);
 
 	return nResult;
 
@@ -1890,11 +1907,14 @@ BOOL CMainFrame::StartReturnHome()
 
 		}
 	}
-	if (/*!m_LaserCtrl.GetAlarm() && */!m_LaserCtrl.IsHomed())
+	if (m_LaserCtrl.GetPLCRDY())
 	{
-		m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_Welding[0], FALSE);
-		m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_Welding[1], TRUE);
-		m_hBondHomeEnd.ResetEvent();
+		if (!m_LaserCtrl.IsHoming() && !m_LaserCtrl.IsHomed())
+		{
+			m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_Welding[0], FALSE);
+			m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_Welding[1], TRUE);
+			m_hBondHomeEnd.ResetEvent();
+		}
 	}
 	return bSuccess;
 }
@@ -1944,12 +1964,14 @@ UINT _cdecl CMainFrame::HomeThread(LPVOID lpParam)
 						{
 							if (!pFrame->m_LaserCtrl.IsHomed())
 							{
-								if (pFrame->m_LaserCtrl.IsHoming())
+								if (pFrame->m_LaserCtrl.GetPLCRDY()&&pFrame->m_LaserCtrl.IsHoming())
 								{
-									if (::WaitForSingleObject(pFrame->m_hBondHomeEnd, 4500) == WAIT_OBJECT_0)
+									HANDLE hEvent[2] = { pFrame->m_pStopRun->m_hObject, pFrame->m_hBondHomeEnd};
+									DWORD dEvent = ::WaitForMultipleObjects(2, hEvent, FALSE, pFrame->m_pDoc->m_cParam.nBondHomeTime*1000);
+									if (dEvent==(WAIT_OBJECT_0+1))
 										break;
 								}
-								::AfxMessageBox(_T("焊头此刻未准备好,请等待或稍后再次手动复位!"));
+								::AfxMessageBox(_T("焊头此刻未准备好,请检查并稍后再次手动复位!"));
 							}
 						} while (FALSE);
 						pFrame->m_nIsHomeEnd = 1;
@@ -2252,7 +2274,7 @@ UINT CMainFrame::WorkProcess(UINT nWp, UINT nStep)
 	}
 	if (!ErrorMsg.IsEmpty())
 	{
-		AddedErrorMsg(ErrorMsg);
+// 		AddedErrorMsg(ErrorMsg);
 	}
 	return nSuccess;
 }
@@ -2267,6 +2289,11 @@ BOOL CMainFrame::StartAuto(BOOL bEnable /*= FALSE*/)
 	{
 		if (!m_bAutoThreadAlive && !m_bHomeThreadAlive[0] && m_nIsHomeEnd&&SwitchCamera(0))
 		{
+			if (!m_LaserCtrl.GetPLCRDY())
+			{
+				AddedErrorMsg(_T("PLC 未准备好\r\n"));
+				return FALSE;
+			}
 			m_LaserCtrl.SetLaserRDY();
 			m_pStopRun->ResetEvent();
 			m_pMotionCtrller[0]->ResetAxisErr();
@@ -2948,15 +2975,14 @@ BOOL CMainFrame::LaserOut(BOOL bOnOff /*= FALSE*/, UINT nMode /*= 0*/)
 	if (bOnOff&&m_bIdling)
 		return TRUE;
 	UINT ndelay(100);
-	// 	m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_PushBallTrigger, FALSE);//清除sq
 	if (bOnOff)
 	{
 		// 		Sleep(250);
 		if (m_nBondAlarm ^ 0x01)//异常
 			return FALSE;
-		// 		if (m_IoCtrller.WaitSensorSignal(m_pDoc->m_cParam.In_WeldingReady, TRUE, 500))
 
-		if (m_IoCtrller.WaitSensorSignal(m_pDoc->m_cParam.In_PLC_Input[0], TRUE, 500))
+// 		if (m_IoCtrller.WaitSensorSignal(m_pDoc->m_cParam.In_PLC_Input[0], TRUE, 500))
+		if (CheckLaserDone())
 		{
 			bSuccess = m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_Trigger, TRUE);
 			if (m_pDoc->m_cParam.nNozzleLife[0])
@@ -2969,14 +2995,32 @@ BOOL CMainFrame::LaserOut(BOOL bOnOff /*= FALSE*/, UINT nMode /*= 0*/)
 			m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_Trigger, FALSE);
 			if (bSuccess&&nMode)//等待
 			{
-// 				bSuccess = m_IoCtrller.WaitSensorSignal(m_pDoc->m_cParam.In_WeldingReady, TRUE, 2000);
+				// 				bSuccess = m_IoCtrller.WaitSensorSignal(m_pDoc->m_cParam.In_WeldingReady, TRUE, 2000);
 				Sleep(1);
-				bSuccess = m_IoCtrller.WaitSensorSignal(m_pDoc->m_cParam.In_PLC_Input[0], TRUE, 2000);
+				// 				bSuccess = m_IoCtrller.WaitSensorSignal(m_pDoc->m_cParam.In_PLC_Input[0], TRUE, 2000);
+				bSuccess = CheckLaserDone(2000);
 			}
 		}
 	}
 	else
 		m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_Trigger, FALSE);
+	return bSuccess;
+}
+
+BOOL CMainFrame::CheckLaserDone(UINT ntime /*= 1000*/)
+{
+	BOOL bSuccess(FALSE);
+	for (UINT i = 0; i < ntime;i++)
+	{
+		if (WAIT_TIMEOUT != ::WaitForSingleObject(m_pStopRun->m_hObject, 0))
+			break;
+		Sleep(1);
+		if (m_IoCtrller.m_bInput[m_pDoc->m_cParam.In_PLC_Input[0]])
+		{
+			bSuccess = TRUE;
+			break;
+		}
+	}
 	return bSuccess;
 }
 
@@ -3433,9 +3477,12 @@ UINT _cdecl CMainFrame::ManualRunThread(LPVOID lpParam)
 			{
 				if (WAIT_TIMEOUT == WaitForSingleObject(pFrame->m_pStopRun->m_hObject, 0))
 				{
-					pFrame->LaserOut(TRUE, TRUE);
+					bSuccess=pFrame->LaserOut(TRUE, TRUE);
 					::PostMessage(pFrame->m_hWnd,WM_USER_INVALIDATE, 1, 0);
-					Sleep(pFrame->m_pDoc->m_cParam.nLaserSpan);
+					if (bSuccess)
+						Sleep(pFrame->m_pDoc->m_cParam.nLaserSpan);
+					else
+						break;
 				}
 				else
 				{
@@ -3444,6 +3491,8 @@ UINT _cdecl CMainFrame::ManualRunThread(LPVOID lpParam)
 			}
 			theApp.m_StopWatch.Stop();
 			::PostMessage(pFrame->m_hWnd, WM_USER_INVALIDATE, 1, i);
+			if (!bSuccess)
+				pFrame->AddedErrorMsg(_T("测试未完成!bond头异常或完成信号超时\r\n"));
 			break;
 		case 9://测试打激光
 			pFrame->m_nCurrentRunMode = 0x03;
@@ -3523,10 +3572,12 @@ BOOL CMainFrame::PollingHandle()
 	if (m_LaserCtrl.IsHoming())
 	{
 		m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_Welding[1],FALSE);
-		m_hBondHomeEnd.SetEvent();
 	}
-// 	if ((m_nCurrentRunMode >> 2) ^ nTemp)
-// 		m_nCurrentRunMode = nTemp<<2;
+	else
+	{
+		if (m_LaserCtrl.IsHomed()&&m_nCurrentRunMode==0x01)
+			m_hBondHomeEnd.SetEvent();
+	}
 	if (::IsWindow(m_hWnd))
 		PostMessage(WM_USER_UPDATEUI,5,m_LaserCtrl.GetLaserPressure());
 	return 0;
@@ -3541,6 +3592,7 @@ UINT CMainFrame::ImageProcess(Image* image, BYTE nIndex, BYTE nWP, BYTE nRow, BY
 	BYTE nOrder = nRow*m_pDoc->m_cParam.PrjCfg.bProductNum[1] + nCol;
 	ImageProcessBinder ipb = {0xff,0xff};
 	BYTE bResult(0);
+	CString str;
 	if (m_pDoc->m_cParam.PrjCfg.bUseBinary)
 	{
 		bSuccess = m_NiVision.CreateBinary(image, image, 2);
@@ -3584,7 +3636,11 @@ UINT CMainFrame::ImageProcess(Image* image, BYTE nIndex, BYTE nWP, BYTE nRow, BY
 						Rect rc = m_pDoc->m_cParam.PrjCfg.rcSearch[ipb.nSearchNum];
 						minScore = m_pDoc->m_cParam.PrjCfg.tTemplateArry[nType - 1].nScore;
 						mode = m_pDoc->m_cParam.PrjCfg.tTemplateArry[nType - 1].bType ? m_pDoc->m_cParam.PrjCfg.tTemplateArry[nType - 1].nContrast : 0;
+						str.Format(_T("产品%d图像处理开始"), nOrder+1);
+						CLogHelper::WriteLog(str);
 						nCount = MatchProcessing(image, nType - 1, rc, minScore, mode, &MatchResults);
+						str.Format(_T("产品%d图像处理结果:%d"), nOrder + 1,nCount);
+						CLogHelper::WriteLog(str);
 						m_NiVision.UpdateOverlay(TempCanvas, image, MATCH_INFO_LAYER + 1, FALSE);
 						bResult |=0x01;
 					}
@@ -3635,6 +3691,8 @@ UINT CMainFrame::ImageProcess(Image* image, BYTE nIndex, BYTE nWP, BYTE nRow, BY
 			m_NiVision.UpdateOverlay((UINT)0, TempCanvas, DETECT_INFO_LAYER + 1, TRUE);
 	}
 	imaqDispose(TempCanvas);
+	str.Format(_T("产品%d图像处理结束返回"), nOrder + 1);
+	CLogHelper::WriteLog(str);
 	return bSuccess;
 }
 
@@ -3648,6 +3706,7 @@ UINT CMainFrame::MatchProcessing(Image* image, BYTE nIndex, Rect rc, UINT nScore
 		return 0;
 	Image*  TempCanvas = imaqCreateImage(IMAQ_IMAGE_U8, 2);
 	Image* TempImg = image;
+	CString str;
 	if (TempImg == NULL)
 	{
 		TempImg = imaqCreateImage(IMAQ_IMAGE_U8, 2);
@@ -3689,6 +3748,8 @@ UINT CMainFrame::MatchProcessing(Image* image, BYTE nIndex, Rect rc, UINT nScore
 	}
 	else
 	{
+		str.Format(_T("图像:%X模板匹配开始"), TempImg);
+		CLogHelper::WriteLog(str);
 		PatternMatchReport* matchInfo = m_NiVision.TemplatemSearch(TempImg, m_pTemplate[nIndex], rc, &nCount, nScore);
 		if (nCount){
 			pt.x = matchInfo->position.x;
@@ -3711,6 +3772,8 @@ UINT CMainFrame::MatchProcessing(Image* image, BYTE nIndex, Rect rc, UINT nScore
 			}
 		}
 		imaqDispose(matchInfo);
+		str.Format(_T("图像:%X模板匹配结果:%d"), TempImg,nCount);
+		CLogHelper::WriteLog(str);
 
 	}
 	CString FilePathName;
@@ -3908,13 +3971,16 @@ int CMainFrame::DetectCircleProcessing(Image* image, BYTE nIndex, Annulus ann, I
 BOOL CMainFrame::GetImg2Buffers(UINT nWp, UINT nCurl, UINT nIndex)
 {
 	BOOL bSuccess(FALSE);
-	CString ErrMsg=_T("");
+	CString ErrMsg = _T("");
+	CString strTemp = _T("");
 	DWORD dEvent(0);
 	Image* TempImg = imaqCreateImage(IMAQ_IMAGE_U8, 2);
 	if (TempImg)
 		bSuccess = m_NiVision.GetImage(0, TempImg, TRUE);
 	if (bSuccess)
 	{
+// 		strTemp.Format(_T("第%d个产品图像正在等待进入处理资源池"), nCurl+1);
+// 		CLogHelper::WriteLog(strTemp);
 		dEvent = ::WaitForMultipleObjects(9, m_hImgProcessEvent, FALSE, 10000);
 		switch (dEvent)
 		{
@@ -3924,6 +3990,8 @@ BOOL CMainFrame::GetImg2Buffers(UINT nWp, UINT nCurl, UINT nIndex)
 		default:
 			if (dEvent < 9)
 			{
+// 				strTemp.Format(_T("%d号处理资源空闲，第%d个产品图像准备进入处理"), dEvent, nCurl+1);
+// 				CLogHelper::WriteLog(strTemp);
 				dEvent--;
 				CWinThread* pThread(NULL);
 				if (!m_pImagePack[dEvent])
@@ -3945,20 +4013,22 @@ BOOL CMainFrame::GetImg2Buffers(UINT nWp, UINT nCurl, UINT nIndex)
 				pThread = AfxBeginThread(ImgProcessThread, (LPVOID)m_pImagePack[dEvent]);
 				if (pThread==NULL)
 				{
-					ErrMsg.Format(_T("%s : <第%d 行照相> 图像处理启动失败!\r\n"), csz[nWp], nIndex + 1);
+					ErrMsg.Format(_T("%s :产品%d <第%d 次照相> 图像处理启动失败!\r\n"), csz[nWp],nCurl+1, nIndex + 1);
 					SetEvent(m_hImgProcessEvent[dEvent+1]);
 					m_pImagePack[dEvent]->pData = NULL;
 					bSuccess = FALSE;
+// 					CLogHelper::WriteLog(ErrMsg);
 				}
 				SetThreadAffinityMask(pThread->m_hThread, 1<<((dEvent%3)+1));
 				break;
 			}
-			ErrMsg.Format(_T("%s : <第%d 行照相> 等待空闲处理资源超时!\r\n"), csz[nWp], nIndex + 1);
+			ErrMsg.Format(_T("%s :产品%d <第%d 次照相> 等待空闲处理资源超时!\r\n"), csz[nWp], nCurl + 1, nIndex + 1);
 			bSuccess = FALSE;
+// 			CLogHelper::WriteLog(ErrMsg);
 			break;
 		}
 	}else
-		ErrMsg.Format(_T("%s : <第%d 行照相> 抓取图像失败!\r\n"), csz[nWp], nIndex + 1);
+		ErrMsg.Format(_T("%s :产品%d <第%d 次照相> 抓取图像失败!\r\n"), csz[nWp], nCurl + 1, nIndex + 1);
 	if (!bSuccess)
 	{
 		imaqDispose(TempImg);

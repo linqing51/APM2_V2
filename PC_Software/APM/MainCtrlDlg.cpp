@@ -328,10 +328,16 @@ void CMainCtrlDlg::OnBnClickedButtonPushBall(UINT idCtl)
 	// TODO:  在此添加控件通知处理程序代码
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
 	CBCGPComboBox* pCombox;
+	if (!pFrame->m_LaserCtrl.GetPLCRDY())
+	{
+		pFrame->AddedErrorMsg(_T("PLC 未准备好\r\n"));
+		return ;
+	}
 	GetDlgItem(idCtl)->EnableWindow(FALSE);
 	switch (idCtl)
 	{
 	case IDC_BUTTON_PUSH_BALL:
+		pFrame->m_IoCtrller.WriteOutputByBit(pFrame->m_pDoc->m_cParam.Ou_Welding[0], FALSE);
 		pFrame->m_LaserCtrl.SetBallRDY();
 		break;
 	case IDC_BUTTON_SHOT:

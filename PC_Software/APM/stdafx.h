@@ -50,13 +50,14 @@
 #ifndef _AFX_NO_AFXCMN_SUPPORT
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
+#include <afxcontrolbars.h>
 #include <vector>
 #include <BCGCBProInc.h>			// BCGPro Control Bar
 #include "NIIMAQdx.h"
 #include "nivision.h"
 #include "nimachinevision.h"
 #include "modbus.h"
-#include <afxcontrolbars.h>
+#include "LogHelper.h"
 #define TODO( x )  message( x )
 
 #ifndef SAFE_DELETE

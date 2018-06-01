@@ -332,7 +332,7 @@ void CProjectSettingDlg::OnKillFocusOrderEdit(UINT idCtl)
 	case IDC_EDIT_WELDING_TIMES:
 		nNum = fWeldingTimes*10;
 		UpdateData();
-		if (fWeldingTimes > 20)
+		if (fWeldingTimes > 200)
 		{
 			AfxMessageBox(_T("出光时间太长了，再想想？"));
 			fWeldingTimes = nNum/10.0;
@@ -454,29 +454,35 @@ void CProjectSettingDlg::OnBnClickedButtonReload()
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
 	int i(0);
 	CString prjname;
-	CString szNew;
+	CString szNew=_T("PLC 未准备好!\r\n");
 	m_cbPrjName.GetLBText(m_nCurrentPrjSel, prjname);
 	pFrame->m_pDoc->LoadPrjData(prjname);
 	PostMessage(WM_USER_UPDATEUI, 2, 1);
 	::PostMessage(pFrame->GetSafeHwnd(), WM_USER_UPDATEUI, 2, 0);
 	i = pFrame->DownPlcConf();
-	CString str[5] = { _T("能量、气压;"), _T("无球报警数;"), _T("清洗能量;"), _T("激光时间;"), _T("") };
+	CString str[] = { _T("能量、气压;"), _T("无球报警数;"), _T("清洗能量;"), _T("落球气压上升时间;"), _T("出球气压下降时间;"), _T("激光时间;"), _T("") };
 	if (i)
 	{
-		for (BYTE j = 0; j < 4;j++)
+		if (i != 0x0ffff)
 		{
-			if (i >> j)
+			for (BYTE j = 0; j < 5; j++)
 			{
-				if ((i >> j) & 0x01)
+				if (i >> j)
 				{
-					szNew.Format(_T("%s"), str[i]);
-					str[4] += szNew;
-				}
+					if ((i >> j) & 0x01)
+					{
+						str[6] += str[i];
+					}
 
-			}else
-				break;
+				}
+				else
+					break;
+			}
+			if (i >> 5)
+				str[6] += str[5];
+
+			szNew.Format(_T("参数写入PLC失败，未完成写入的有\r\n%s\r\n"), str[6]);
 		}
-		szNew.Format(_T("参数写入PLC失败，未完成写入的有\r\n%s\r\n"), str[4]);
 		pFrame->AddedErrorMsg(szNew);
 	}
 	m_btnLoad.GetWindowText(szNew);

@@ -86,7 +86,7 @@ void CHomeSettingDlg::OnKillFocusEditVel(UINT idCtl)
 		nIndex -= 12;
 		dvalue = m_SpeedCfg.Run_ACC[nIndex];
 		UpdateData();
-		if (m_SpeedCfg.Run_ACC[nIndex] < 1||m_SpeedCfg.Run_ACC[nIndex] >1500){
+		if (m_SpeedCfg.Run_ACC[nIndex] < 1||m_SpeedCfg.Run_ACC[nIndex] >2500){
 			m_SpeedCfg.Run_ACC[nIndex] = dvalue;
 			UpdateData(FALSE);
 		}

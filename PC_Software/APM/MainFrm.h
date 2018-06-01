@@ -158,6 +158,7 @@ public:
 	int	 SlaveWaitFor(UINT nCmd);
 	BOOL SetCurrentLaserGP(UINT nIndex);
 	BOOL LaserOut(BOOL bOnOff = FALSE, UINT nMode = 0);//
+	BOOL CheckLaserDone(UINT ntime = 1000);//
 	BOOL BlowAct(UINT nIndex, BOOL bOnOff, BOOL bWait = FALSE);
 	BOOL SetDockReady(UINT nIndex, BOOL bLoad = TRUE);
 	BOOL IsDockReady(UINT nIndex);

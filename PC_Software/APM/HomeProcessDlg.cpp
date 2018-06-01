@@ -118,7 +118,7 @@ LRESULT CHomeProcessDlg::OnHoming(WPARAM wParam, LPARAM lParam)
 		if (nSts == 1){
 			nProcess += 33;
 			m_ctlProgress.SetPos(nProcess);
-			m_wndTips.SetText(_T("X、LY、RY轴复位结束…………"));
+			m_wndTips.SetText(_T("X、LY、RY轴复位结束…………等待Bond头碟片复位"));
 		}
 		else
 			m_wndTips.SetText(_T("X、LY、RY轴复位失败…………"));
@@ -129,7 +129,7 @@ LRESULT CHomeProcessDlg::OnHoming(WPARAM wParam, LPARAM lParam)
 		if (nSts == 1){
 			nProcess += 33;
 			m_ctlProgress.SetPos(nProcess);
-			m_wndTips.SetText(_T("Z轴复位结束…………"));
+			m_wndTips.SetText(_T("Z轴复位结束…………等待X LY RY复位"));
 		}
 		else
 			m_wndTips.SetText(_T("Z轴复位失败…………"));
@@ -140,7 +140,7 @@ LRESULT CHomeProcessDlg::OnHoming(WPARAM wParam, LPARAM lParam)
 		if (nSts == 1){
 			nProcess += 33;
 			m_ctlProgress.SetPos(nProcess);
-			m_wndTips.SetText(_T("CX、VZ轴复位结束…………"));
+			m_wndTips.SetText(_T("CX、VZ轴复位结束…………等待Bond头碟片复位"));
 		}
 		else
 			m_wndTips.SetText(_T("CX、VZ轴复位失败…………"));

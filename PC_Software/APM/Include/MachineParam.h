@@ -111,6 +111,8 @@ public:
 	double			dCCD_Nozzle[3];
 	UINT			nNozzleLife[2];
 	UINT			BallAlarmNum;
+	UINT			nBondHomeTime;
+	UINT			nDroppingTime[2];
 	UINT			nEnabeSafetyDev;
 	BYTE			nLightLimit[3];
 	//

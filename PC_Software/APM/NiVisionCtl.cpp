@@ -68,6 +68,8 @@ void CNiVisionCtl::DisplayNIIMAQdxError(IMAQdxError error)
 	Errorcode += CA2T(errorText);
 	if (ShowMessage)
 		ShowMessage(Errorcode,TRUE,5);
+	CLogHelper::WriteLog(Errorcode);
+
 }
 
 BOOL CNiVisionCtl::PreInit(void* pWnd,UINT nNumber,BOOL bNiCamera)
@@ -386,6 +388,9 @@ BOOL CNiVisionCtl::GetLastGrab(UINT nIndex)
 		}
 		RotateImage(nIndex, TempImage);
 		imaqCast(m_pImage[nIndex],TempImage , IMAQ_IMAGE_U8, NULL, 0);
+// 		CString str;
+// 		str.Format(_T("ץȡͼƬʱ"), 1);
+// 		CLogHelper::WriteLog(str);
 		m_CriticalCard[nIndex].Unlock();
 
 	}
@@ -461,6 +466,8 @@ void CNiVisionCtl::DisplayNIVisionError(int error)
 	Errorcode = CA2T(Astr);
 	if (ShowMessage)
 		ShowMessage(Errorcode, TRUE, 5);
+	CLogHelper::WriteLog(Errorcode);
+
 	imaqDispose(errorText);
 }
 
@@ -502,10 +509,12 @@ BOOL CNiVisionCtl::Camera_Display(UINT nIndex, BOOL bShow, Image* image)
 	FLOAT rate(1);
 	int nWidth(0);
 	int nHeight(0);
+	ImageInfo iminfo ;
 	if (nIndex < m_nCameraNum){
 		m_CriticalCard[nIndex].Lock();
 		Image* displayImg = image ? image : m_pImage[nIndex];
-
+		CWnd* p=CWnd::FromHandle((HWND)imaqGetSystemWindowHandle(m_nDisplayBinder[nIndex]));
+		CWnd* q = p->GetParent();
 		nSuccess = imaqClearOverlay(displayImg, NULL);
 		nSuccess = !nSuccess ? nSuccess : imaqCopyOverlay(displayImg, m_pOverlay[nIndex], NULL);
 		if (bShow){
@@ -990,6 +999,7 @@ PatternMatchReport* CNiVisionCtl::TemplatemSearch(const Image* source, Image* it
 	int i(0);
 	int nRequest = *nCount;
 	*nCount = 0;
+
 	ROI* roi = imaqCreateROI();
 	nSuccess = imaqAddRectContour(roi,searchRect);
 	RotationAngleRange angle[2] = { -15,0,0, 15 };
@@ -1002,7 +1012,7 @@ PatternMatchReport* CNiVisionCtl::TemplatemSearch(const Image* source, Image* it
 		advancedOptions[i].matchSetupOption = (MatchSetupOption)advOptionsItems[i];
 		advancedOptions[i].value = advOptionsValues[i];
 	}
-	for (i = 0; i <3; i++)
+	for (i = 0; i <1; i++)
 	{
 		int nFind=0;
 		PatternMatchReport* pInfo= NULL;

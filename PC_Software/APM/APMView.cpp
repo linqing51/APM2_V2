@@ -67,6 +67,7 @@ BOOL CAPMView::PreCreateWindow(CREATESTRUCT& cs)
 void CAPMView::OnDraw(CDC* /*pDC*/)
 {
 	CAPMDoc* pDoc = GetDocument();
+	CWnd*p=GetDlgItem(IDC_STATIC_CONTAIN);
 	ASSERT_VALID(pDoc);
 	if (!pDoc)
 		return;

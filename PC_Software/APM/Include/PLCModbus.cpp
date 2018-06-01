@@ -187,7 +187,7 @@ BOOL CPLCModbus::SetTriggerCleanMode()
 UINT CPLCModbus::GetAlarm()//0:设备复位;1:无球;2:堵球;3:清洗;4:;5:;7:;
 {
 	USHORT arg(0);
-	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 400, &arg))//DM400
+	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 800, &arg))//DM800
 		return FALSE;
 // 	for (int i = 1; i < 8; i++)
 // 		arg[0] |= arg[i] << i;
@@ -264,7 +264,7 @@ UINT CPLCModbus::GetLaserPressure(UINT nIndex)
 BOOL CPLCModbus::SetLaserPressure(UINT nNumber, UINT nIndex)
 {
 	USHORT arg(nNumber);
-	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 414 , &arg, 1, WRIT))//DM411
+	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 411 , &arg, 1, WRIT))//DM411
 		return FALSE;
 	return TRUE;
 
@@ -288,21 +288,21 @@ BOOL CPLCModbus::SetDetectPressure(UINT nNumber, UINT nIndex)
 
 }
 
-BOOL CPLCModbus::GetConfigList(FLOAT& fPower, UINT& nPressure, UINT& ndetect_up, UINT & ndetect_low)
+BOOL CPLCModbus::GetConfigList(FLOAT& fPower, FLOAT& fPressure, UINT& ndetect_up, UINT & ndetect_low)
 {
 	USHORT arg[4] = {0};
 	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 410, arg, 4))//DM410--DM413
 		return FALSE;
 	fPower = arg[0]/10.0;
-	nPressure = arg[1];
+	fPressure = arg[1]/10.0;
 	ndetect_up = arg[2] ;
 	ndetect_low = arg[3];
 	return TRUE;
 }
 
-BOOL CPLCModbus::SetConfigList(FLOAT fPower, UINT nPressure, UINT ndetect_up, UINT ndetect_low)
+BOOL CPLCModbus::SetConfigList(FLOAT fPower, FLOAT nPressure, UINT ndetect_up, UINT ndetect_low)
 {
-	USHORT arg[] = { fPower * 10, nPressure, ndetect_up, ndetect_low };
+	USHORT arg[] = { fPower * 10, nPressure*10, ndetect_up, ndetect_low };
 
 	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 410, arg, 4, WRIT))//DM410--DM413
 		return FALSE;
@@ -312,9 +312,9 @@ BOOL CPLCModbus::SetConfigList(FLOAT fPower, UINT nPressure, UINT ndetect_up, UI
 FLOAT CPLCModbus::GetPowerTime(UINT nIndex)
 {
 	USHORT arg(0);
-	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 300 + nIndex , &arg))//DM300
+	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 300 + nIndex, &arg))//DM300
 		return FALSE;
-	return arg/10.0;
+	return arg / 10.0;
 }
 
 BOOL CPLCModbus::SetPowerTime(FLOAT ftime, UINT nIndex)
@@ -326,6 +326,36 @@ BOOL CPLCModbus::SetPowerTime(FLOAT ftime, UINT nIndex)
 	return TRUE;
 
 }
+
+UINT CPLCModbus::GetDroppingTime(UINT nIndex)
+{
+	USHORT arg[2] = {0,0};
+	UINT nResult;
+	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 416 + nIndex*2 , arg,2))//DM416
+		return FALSE;
+	nResult = arg[0]|(arg[1]<<16);
+	return nResult;
+}
+
+BOOL CPLCModbus::SetDroppingTime(UINT ntime, UINT nIndex)
+{
+	USHORT arg[2] = { 0, 0 };
+	arg[0] = ntime & 0x0ffff;
+	arg[1] = ntime>>16;
+
+	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 416 + nIndex*2, arg, 2, WRIT))//DM418
+		return FALSE;
+	return TRUE;
+}
+
+BOOL CPLCModbus::GetPLCRDY()
+{
+	USHORT arg(0);
+	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 900, &arg))//DM412
+		return FALSE;
+	return arg==0x90d;
+}
+
 /*
 //过时
 BOOL CPLCModbus::SetTriggerLaser()

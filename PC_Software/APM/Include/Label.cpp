@@ -260,6 +260,11 @@ void CLabel::OnPaint()
 	{
 		pDCMem = new CDC;
 		VERIFY(pDCMem->CreateCompatibleDC(&dc));
+		if (!pDCMem->m_hDC)
+		{
+			delete pDCMem;
+			return;
+		}
 		bmp.CreateCompatibleBitmap(&dc,rc.Width(),rc.Height());
 		pOldBitmap = pDCMem->SelectObject(&bmp);
 	}

@@ -16,7 +16,7 @@ public:
 	float   fPower;
 	float   fCleanPower;
 	UINT	nDelayTime;
-	UINT	nLaserPressure;
+	float	fLaserPressure;
 	UINT	nBallPressure[2];
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
