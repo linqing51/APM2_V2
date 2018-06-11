@@ -276,7 +276,7 @@ LRESULT CMotionDlg::OnUpdateDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 	int i(0), j(2);
 	UINT nIndex = wParam;
 	UINT num;
-	BOOL bEnable = pFrame->GetUserType() && !pFrame->m_nCurrentRunMode  && pFrame->m_nIsHomeEnd;
+	BOOL bEnable = pFrame->GetUserType() && !pFrame->m_nCurrentRunMode ;
 
 	switch (nIndex)
 	{
@@ -285,13 +285,13 @@ LRESULT CMotionDlg::OnUpdateDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 			GetDlgItem(IDC_BUTTON_MOVE_XL+i)->EnableWindow(bEnable);
 		GetDlgItem(IDC_RADIO_LEFT)->EnableWindow(bEnable);
 		m_cPositionChs.EnableWindow(bEnable);
-		GetDlgItem(IDC_BUTTON_GOPOSITION)->EnableWindow(bEnable);
+		GetDlgItem(IDC_BUTTON_GOPOSITION)->EnableWindow(bEnable&& pFrame->m_nIsHomeEnd);
 		j = m_cPositionChs.GetCurSel();
 		m_cVisionOrderChs.EnableWindow(j == 6 ? bEnable : FALSE);
 		GetDlgItem(IDC_COMBO_PRODUCT_ROW)->EnableWindow(j == 6 ? bEnable : FALSE);
 		GetDlgItem(IDC_COMBO_PRODUCT_COL)->EnableWindow(j == 7 ? bEnable : FALSE);
 		GetDlgItem(IDC_BUTTON_SHOT_CALIBRATE)->EnableWindow(j == 4 ? bEnable : FALSE);
-		GetDlgItem(IDC_BUTTON_SAVEPOSITION)->EnableWindow(bEnable);
+		GetDlgItem(IDC_BUTTON_SAVEPOSITION)->EnableWindow(bEnable&& pFrame->m_nIsHomeEnd);
 
 		break;
 	case 1:
