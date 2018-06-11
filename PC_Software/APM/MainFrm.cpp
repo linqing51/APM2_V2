@@ -88,6 +88,7 @@ m_pLoginDlg(NULL), m_pView(NULL),m_pWaiteProcessDlg(NULL)
 	m_bHomeThreadAlive[0] = FALSE;
 	m_bHomeThreadAlive[1] = FALSE;
 	m_bPollingAlive = FALSE;
+	m_bFileThreadAlive = FALSE;
 	m_nCameraAlive = FALSE;
 	m_bLearningAlive = FALSE;
 	m_bIsEmergencyStop = TRUE;
@@ -320,8 +321,8 @@ void CMainFrame::UpdateTitle()
 {
 	CString sz;
 	CString str[] = { _T("操作员"), _T("技术员"), _T("工程师"),_T("超级？")};
-	sz = m_pDoc->m_cParam.DefaultProjectName + _T("<---------") + str[m_nUserType];
-	GetActiveDocument()->SetTitle(sz);
+	sz = m_pDoc->m_szCurParamName + _T("<---------") + str[m_nUserType];
+	m_pDoc->SetTitle(sz);
 }
 
 
@@ -645,6 +646,7 @@ void CMainFrame::OnCommandNewProject()
 	m_pPrjSettingDlg->m_cbPrjName.ShowWindow(SW_HIDE);
 	m_pPrjSettingDlg->m_btnLoad.ShowWindow(SW_HIDE);
 	m_pPrjSettingDlg->GetDlgItem(IDC_EDIT_NEWPROJECT)->ShowWindow(SW_SHOW);
+	m_pPrjSettingDlg->GetDlgItem(IDC_EDIT_NEWPROJECT)->SetWindowTextW(_T(""));
 	::PostMessage(m_pPrjSettingDlg->m_hWnd, WM_USER_UPDATEUI, 0, 1);
 }
 
@@ -665,7 +667,8 @@ void CMainFrame::OnViewProjectSetting()
 	m_pPrjSettingDlg->m_cbPrjName.ShowWindow(SW_SHOW);
 	m_pPrjSettingDlg->GetDlgItem(IDC_EDIT_NEWPROJECT)->ShowWindow(SW_HIDE);
 	m_pPrjSettingDlg->m_btnLoad.ShowWindow(SW_SHOW);
-	::PostMessage(m_pPrjSettingDlg->m_hWnd,WM_USER_UPDATEUI, 0, 1);
+	m_pPrjSettingDlg->m_btnLoad.SetWindowText(_T("加载"));
+	::PostMessage(m_pPrjSettingDlg->m_hWnd, WM_USER_UPDATEUI, 0, 1);
 }
 
 void CMainFrame::OnViewIODlg()
@@ -780,7 +783,7 @@ void CMainFrame::OnUpdateFileOpen(CCmdUI *pCmdUI)
 void CMainFrame::OnUpdateFileSave(CCmdUI *pCmdUI)
 {
 	// TODO:  在此添加命令更新用户界面处理程序代码
-	pCmdUI->Enable(m_nUserType&&!m_nCurrentRunMode);
+	pCmdUI->Enable(m_nUserType&&!m_nCurrentRunMode&&!m_bFileThreadAlive);
 }
 
 //BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
@@ -863,12 +866,6 @@ BOOL CMainFrame::InitHardware()
 	m_NiVision.ResizeDisplayWnd(0, ClientRc);
 	m_NiVision.m_nRotate = 0x03 << 2;
 
-	for (i = 0; i < 16; i++)
-	{
-		if (m_pDoc->m_cParam.PrjCfg.uTemplateSts & (1 << i))
-			if (!LoadTemplate(i, FALSE))
-				m_pDoc->m_cParam.PrjCfg.uTemplateSts &= ~(0x01 << i);
-	}
 	cfgName = _T("1756-0.xml");
 	bSucces = bSucces ? m_IoCtrller.InitCard(1756) : bSucces;
 	bSucces = bSucces ? m_IoCtrller.LoadConfig(m_pDoc->m_szCurrentFolder + cfgName) : bSucces;
@@ -1004,8 +1001,12 @@ BOOL CMainFrame::SetHardWareRun(BOOL bEnable /*= TRUE*/)
 	}
 	else
 		bResult |= 0x0F0;
-	if (!(bResult>>4))
-		SetTimer(0,4000,NULL);
+	if (!(bResult >> 4))
+	{
+		UINT n=	SetTimer(5, 4000, NULL);
+		if (n ^ 5)
+			AfxMessageBox(_T("设备初始化:定时器5启动异常"));
+	}
 	m_bIsPowerOn = !bResult;
 	return bResult;
 }
@@ -1814,7 +1815,7 @@ LRESULT CMainFrame::OnUpdateDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 
 		break;
 	case 2:
-		PostMessage(0, 1);
+		PostMessage(WM_USER_UPDATEUI,0,1);
 		::PostMessage(m_pView->m_MainCtrlDlg.m_hWnd, WM_USER_UPDATEUI, 0, 0);
 		::PostMessage(m_pView->m_MainCtrlDlg.m_hWnd, WM_USER_UPDATEUI, 2, 0);
 		::PostMessage(m_pView->m_MotionDlg.m_hWnd, WM_USER_UPDATEUI, 4, 0);
@@ -2274,7 +2275,7 @@ UINT CMainFrame::WorkProcess(UINT nWp, UINT nStep)
 	}
 	if (!ErrorMsg.IsEmpty())
 	{
-// 		AddedErrorMsg(ErrorMsg);
+		AddedErrorMsg(ErrorMsg);
 	}
 	return nSuccess;
 }
@@ -2320,7 +2321,9 @@ BOOL CMainFrame::StartAuto(BOOL bEnable /*= FALSE*/)
 
 				QueryPerformanceCounter(&m_lTimestart);
 				m_lQuantityStart = m_pView->m_MainCtrlDlg.m_lQuantity;
-				SetTimer(1, 1000, NULL);
+				UINT n=SetTimer(1, 1000, NULL);
+				if (n ^ 1)
+					AfxMessageBox(_T("设备初始化:定时器1启动异常"));
 			}
 		}
 		else
@@ -2859,7 +2862,7 @@ BOOL CMainFrame::SnapshotProcess(UINT nWp)
 				}
 				else
 				{
-					m_pView->m_MainCtrlDlg.OnUpdateSts(nWp, nTotal, CMainCtrlDlg::FLASH_ENABLE, CMainCtrlDlg::ERASING_STS);
+// 					m_pView->m_MainCtrlDlg.OnUpdateSts(nWp, nTotal, CMainCtrlDlg::FLASH_ENABLE, CMainCtrlDlg::ERASING_STS);
 					m_nCurrentWP[CAMERA] = 0x03;
 					m_hCameraFree.SetEvent();
 				}
@@ -3148,10 +3151,11 @@ UINT _cdecl CMainFrame::SlaveThread(LPVOID lpParam)
 						}
 						pFrame->SetButtonLamp(nId, TRUE);
 						pFrame->m_pView->m_MainCtrlDlg.OnUpdateSts(nId);
+						Sleep(1000);
 						pFrame->m_CriticalData.Lock();
 						pFrame->m_bWaitforTrigger &= ~(1 << nId);
 						pFrame->EnableSaftyDev(0, TRUE);
-						if (pFrame->GoPosition((nId << 4) + PRE_SNAPSHOT_POSITION))
+						if (pFrame->GoPosition((nId << 4) + PRE_SNAPSHOT_POSITION) && WAIT_TIMEOUT == ::WaitForSingleObject(pFrame->m_pStopRun->m_hObject, 0))
 						{
 							if (pFrame->m_bWaitforTrigger& (0x02 >> nId))
 								pFrame->EnableSaftyDev(0, FALSE);
@@ -3236,14 +3240,16 @@ UINT _cdecl CMainFrame::SlaveThread(LPVOID lpParam)
 	case NOZZLE_CLEAN:
 		id_CMD = _T("NOZZLE_CLEAN");
 	case BALLS_SUPPLY:
-		if (!pFrame->ZGoPosition(ZSAFE_POSITION, FALSE, TRUE))
+		if (!pFrame->ZGoPosition(ZSAFE_POSITION, FALSE, TRUE) && WAIT_TIMEOUT == ::WaitForSingleObject(pFrame->m_pStopRun->m_hObject, 0))
 		{
 			ErrMsg.Format(_T("%s :焊嘴移动至安全高度失败!\r\n"), csz[nId]);
 			break;
-		}else if (!pFrame->GoPosition((nId << 4) + NOZZLE_CLEAN_POSITION)){
+		}
+		else if (!pFrame->GoPosition((nId << 4) + NOZZLE_CLEAN_POSITION) && WAIT_TIMEOUT == ::WaitForSingleObject(pFrame->m_pStopRun->m_hObject, 0)){
 			ErrMsg.Format(_T("%s :xy 移动至 %s 位置失败!\r\n"), csz[nId],id_CMD);
 			break;
-		}else if (!pFrame->ZGoPosition(NOZZLE_CLEAN_POSITION, FALSE, TRUE))	{
+		}
+		else if (!pFrame->ZGoPosition(NOZZLE_CLEAN_POSITION, FALSE, TRUE) && WAIT_TIMEOUT == ::WaitForSingleObject(pFrame->m_pStopRun->m_hObject, 0))	{
 			ErrMsg.Format(_T("%s :Z 移动至 %s 位置失败!\r\n"), csz[nId],id_CMD);
 			break;
 		}
@@ -3659,8 +3665,8 @@ UINT CMainFrame::ImageProcess(Image* image, BYTE nIndex, BYTE nWP, BYTE nRow, BY
 					if (nCount)
 					{
 						m_nPinVisionSuccess[nWP][nOrder][i] = TRUE;
-						m_dLaserOffset[nWP][nOrder][i][0] = (abs(MatchResults.results[0].resultVal.numVal) < 5) ? MatchResults.results[0].resultVal.numVal : 0;
-						m_dLaserOffset[nWP][nOrder][i][1] = (abs(MatchResults.results[1].resultVal.numVal) < 5) ? MatchResults.results[1].resultVal.numVal : 0;
+						m_dLaserOffset[nWP][nOrder][i][0] = (abs(MatchResults.results[0].resultVal.numVal) < 6) ? MatchResults.results[0].resultVal.numVal : 0;
+						m_dLaserOffset[nWP][nOrder][i][1] = (abs(MatchResults.results[1].resultVal.numVal) < 6) ? MatchResults.results[1].resultVal.numVal : 0;
 						m_dLaserOffset[nWP][nOrder][i][2] = 360-MatchResults.results[2].resultVal.numVal;
 						m_pView->m_MainCtrlDlg.OnUpdateSts(nWP, nOrder, CMainCtrlDlg::WELDING_OK << 1, CMainCtrlDlg::ADD_STS);
 					}
@@ -3669,6 +3675,7 @@ UINT CMainFrame::ImageProcess(Image* image, BYTE nIndex, BYTE nWP, BYTE nRow, BY
 						m_nPinVisionSuccess[nWP][nOrder][i] = FALSE;
 						m_pView->m_MainCtrlDlg.OnUpdateSts(nWP, nOrder, CMainCtrlDlg::VISION_FAIL << 1, CMainCtrlDlg::ADD_STS);
 					}
+					m_pView->m_MainCtrlDlg.OnUpdateSts(nWP, nOrder, CMainCtrlDlg::FLASH_ENABLE, CMainCtrlDlg::ERASING_STS);
 					SAFE_DELETEARRAY(MatchResults.results);
 				}
 			}
@@ -3726,7 +3733,7 @@ UINT CMainFrame::MatchProcessing(Image* image, BYTE nIndex, Rect rc, UINT nScore
 		if (nCount){
 			pt.x = GmatchInfo->position.x;
 			pt.y = GmatchInfo->position.y;
-			info.Format(_T("X=%f ;Y=%f;\r\n Score:%f;\r\nCX:%f,CY:%f;\r\n calibratedAngle:%f;"),
+			info.Format(_T("X=%f ;Y=%f;\r\n 评分:%f;\r\nCX:%f,CY:%f;\r\n 相对角度:%f;"),
 				GmatchInfo->position.x, GmatchInfo->position.y, GmatchInfo->score, GmatchInfo->calibratedPosition.x, GmatchInfo->calibratedPosition.y,
 				GmatchInfo->calibratedRotation);
 			if (stepResults)
@@ -3754,7 +3761,7 @@ UINT CMainFrame::MatchProcessing(Image* image, BYTE nIndex, Rect rc, UINT nScore
 		if (nCount){
 			pt.x = matchInfo->position.x;
 			pt.y = matchInfo->position.y;
-			info.Format(_T("X=%f ;Y=%f;\r\n Score:%f;\r\nCX:%f,CY:%f;\r\n calibratedAngle:%f;"),
+			info.Format(_T("X=%f ;Y=%f;\r\n 评分:%f;\r\nCX:%f,CY:%f;\r\n 相对角度:%f;"),
 				matchInfo->position.x, matchInfo->position.y, matchInfo->score, matchInfo->calibratedPosition.x, matchInfo->calibratedPosition.y,
 				matchInfo->calibratedRotation);
 			if (stepResults)
@@ -3782,9 +3789,9 @@ UINT CMainFrame::MatchProcessing(Image* image, BYTE nIndex, Rect rc, UINT nScore
 // 		FilePathName.Format(m_pDoc->m_szCurrentFolder + _T("Parameter\\match%d.png"), nIndex);
 		m_NiVision.DrawCross(TempCanvas, pt, MATCH_INFO_LAYER);
 	}
-	else if (stepResults&&GetUserType()==2)
+	else if (stepResults&&(GetUserType()==2||0))
 	{
-		FilePathName.Format(m_pDoc->m_szCurrentFolder + _T("Parameter\\%d-%dnomatch%d.png"), stepResults->stepIndex >> 7,(stepResults->stepIndex<<1)>>1, nIndex);
+		FilePathName.Format(m_pDoc->m_szCurrentFolder + _T("NG\\%d-%dnomatch%d.png"), stepResults->stepIndex >> 7,(stepResults->stepIndex&0x07f), nIndex);
 		m_NiVision.RWVisionFile(TempImg, FilePathName);
 
 	}
@@ -3979,8 +3986,8 @@ BOOL CMainFrame::GetImg2Buffers(UINT nWp, UINT nCurl, UINT nIndex)
 		bSuccess = m_NiVision.GetImage(0, TempImg, TRUE);
 	if (bSuccess)
 	{
-// 		strTemp.Format(_T("第%d个产品图像正在等待进入处理资源池"), nCurl+1);
-// 		CLogHelper::WriteLog(strTemp);
+		strTemp.Format(_T("第%d个产品图像正在等待进入处理资源池"), nCurl+1);
+		CLogHelper::WriteLog(strTemp);
 		dEvent = ::WaitForMultipleObjects(9, m_hImgProcessEvent, FALSE, 10000);
 		switch (dEvent)
 		{
@@ -3990,8 +3997,8 @@ BOOL CMainFrame::GetImg2Buffers(UINT nWp, UINT nCurl, UINT nIndex)
 		default:
 			if (dEvent < 9)
 			{
-// 				strTemp.Format(_T("%d号处理资源空闲，第%d个产品图像准备进入处理"), dEvent, nCurl+1);
-// 				CLogHelper::WriteLog(strTemp);
+				strTemp.Format(_T("%d号处理资源空闲，第%d个产品图像准备进入处理"), dEvent, nCurl+1);
+				CLogHelper::WriteLog(strTemp);
 				dEvent--;
 				CWinThread* pThread(NULL);
 				if (!m_pImagePack[dEvent])
@@ -4017,7 +4024,7 @@ BOOL CMainFrame::GetImg2Buffers(UINT nWp, UINT nCurl, UINT nIndex)
 					SetEvent(m_hImgProcessEvent[dEvent+1]);
 					m_pImagePack[dEvent]->pData = NULL;
 					bSuccess = FALSE;
-// 					CLogHelper::WriteLog(ErrMsg);
+					CLogHelper::WriteLog(ErrMsg);
 				}
 				SetThreadAffinityMask(pThread->m_hThread, 1<<((dEvent%3)+1));
 				break;
@@ -4033,6 +4040,7 @@ BOOL CMainFrame::GetImg2Buffers(UINT nWp, UINT nCurl, UINT nIndex)
 	{
 		imaqDispose(TempImg);
 		m_pView->m_MainCtrlDlg.OnUpdateSts(nWp, nCurl, CMainCtrlDlg::VISION_FAIL<<1);
+		m_pView->m_MainCtrlDlg.OnUpdateSts(nWp, nCurl, CMainCtrlDlg::FLASH_ENABLE, CMainCtrlDlg::ERASING_STS);
 	}
 	if (!ErrMsg.IsEmpty())
 		AddedErrorMsg(ErrMsg);
@@ -4181,14 +4189,20 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 	CString str[] = { _T("测距：无效"), _T("测距：偏高"), _T("测距：偏低"), _T("测距：合适")};
 	switch (nIDEvent)
 	{
-	case 0:
+	case 5:
+		StartTemplateRW(FALSE,1);
 		if (m_pMotionCtrller[0]->m_bInit&&m_pMotionCtrller[1]->m_bInit)
 		{
 			m_pMotionCtrller[0]->ResetAxisErr();
 			m_pMotionCtrller[1]->ResetAxisErr();
-			SetTimer(2, 500, NULL);
-			SetTimer(3, 1000, NULL);
-		}else
+			UINT n=SetTimer(2, 500, NULL);
+			if (n ^ 2)
+				AfxMessageBox(_T("设备初始化:定时器2启动异常"));
+			n=SetTimer(3, 1000, NULL);
+			if (n ^ 3)
+				AfxMessageBox(_T("设备初始化:定时器3启动异常"));
+		}
+		else
 			ShowWindow(SW_SHOWMAXIMIZED);
 		KillTimer(nIDEvent);
 		break;
@@ -4226,6 +4240,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		m_pMotionCtrller[0]->ResetAxisErr();
 		m_pMotionCtrller[1]->ResetAxisErr();
 		ShowWindow(SW_SHOWMAXIMIZED);
+		UpdateTitle();
 		KillTimer(nIDEvent);
 		break;
 	case 4:
@@ -4238,20 +4253,20 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 void CMainFrame::OnClose()
 {
 	// TODO:  在此添加消息处理程序代码和/或调用默认值
-	LightControllerSet(0, FALSE);
-	::WaitForSingleObject(m_hRs485Event, 2000);
-	LightControllerSet(1, FALSE);
-	::WaitForSingleObject(m_hRs485Event, 2000);
 	if (theApp.m_bNeedSave)
 	{
 		if (IDYES == MessageBox(_T("有参数更改，需要保存至当前项目文件吗?"), _T("重要提示"), MB_YESNO))
 		{
-			theApp.m_bNeedSave = FALSE;
-			SendMessage(WM_COMMAND, ID_FILE_SAVE, 0);
+			StartTemplateRW();
+			return;
 		}
 		else if (IDNO == MessageBox(_T("确认退出程序码?"), _T("重要提示"), MB_YESNO))
 			return;
 	}
+	LightControllerSet(0, FALSE);
+	::WaitForSingleObject(m_hRs485Event, 2000);
+	LightControllerSet(1, FALSE);
+	::WaitForSingleObject(m_hRs485Event, 2000);
 	m_LaserCtrl.SetLaserRDY(FALSE);
 	m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_DCF[2], FALSE);
 	m_LaserCtrl.SetbondServoRDY(FALSE);
@@ -4444,7 +4459,7 @@ BOOL CMainFrame::ShowWaiteProcessDlg(BOOL bShow /*= TRUE*/)
 		if (m_pWaiteProcessDlg == NULL)
 			m_pWaiteProcessDlg = new CWaiteProcessDlg;
 		if (m_pWaiteProcessDlg &&  m_pWaiteProcessDlg->GetSafeHwnd() == NULL)
-			m_pWaiteProcessDlg->Create(CWaiteProcessDlg::IDD, this);
+			m_pWaiteProcessDlg->Create(CWaiteProcessDlg::IDD, theApp.m_pMainWnd);
 		m_pWaiteProcessDlg->ShowWindow(SW_RESTORE);
 		nCount++;
 	}
@@ -4457,13 +4472,86 @@ BOOL CMainFrame::ShowWaiteProcessDlg(BOOL bShow /*= TRUE*/)
 			SAFE_DELETEDLG(m_pWaiteProcessDlg);
 		}
 	}
-	return TRUE;
+	return nCount;
 }
 
 void CMainFrame::UpdateWaiteProcessDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 {
 	if (m_pWaiteProcessDlg&&m_pWaiteProcessDlg->GetSafeHwnd())
 		::PostMessage(m_pWaiteProcessDlg->m_hWnd, WM_USER_SHOWPROCESS, wParam, lParam);
+}
+
+UINT _cdecl CMainFrame::FileRWProcess(LPVOID lpParam)
+{
+	LuckyBag* pOperateOrder = (LuckyBag*)lpParam;
+	CMainFrame* pFrame = (CMainFrame*)(pOperateOrder->pOwner);
+	UINT bSaveOrLoad = pOperateOrder->nIndex[0];
+	UINT nMode = pOperateOrder->nIndex[1];
+
+	SAFE_DELETEARRAY(pOperateOrder->nIndex);
+	SAFE_DELETE(pOperateOrder);
+	if (pFrame)
+	{
+		pFrame->m_bFileThreadAlive = TRUE;
+		pFrame->UpdateWaiteProcessDlg(0, _mm_popcnt_u32(pFrame->m_pDoc->m_cParam.PrjCfg.uTemplateSts));
+		for (BYTE i = 0; i < 16; i++)
+		{
+			if (pFrame->m_pDoc->m_cParam.PrjCfg.uTemplateSts & (1 << i))
+			{
+				if (!pFrame->LoadTemplate(i, bSaveOrLoad))
+					pFrame->m_pDoc->m_cParam.PrjCfg.uTemplateSts &= ~(0x01 << i);
+				pFrame->UpdateWaiteProcessDlg(1, 0);
+			}
+		}
+		theApp.ShowWaiteProcessDlg(FALSE);
+		switch (nMode)
+		{
+		case 0:
+			pFrame->OnFileSave(0);
+		default:
+			break;
+		}
+		pFrame->m_bFileThreadAlive = FALSE;
+	}
+	return 0;
+}
+
+BOOL CMainFrame::StartTemplateRW(BOOL bSave /*= TRUE*/, BYTE nMode)
+{
+	BOOL bSuccess(TRUE);
+	CWinThread* pThread(NULL);
+	pLuckyBag pOperateOrder = new LuckyBag;
+	pOperateOrder->pOwner = this;
+	pOperateOrder->nIndex = new UINT[2];
+	pOperateOrder->nIndex[0] = bSave;
+	pOperateOrder->nIndex[1] = nMode;
+	if (!m_bFileThreadAlive)
+		ShowWaiteProcessDlg(TRUE);
+
+	if (m_bFileThreadAlive || !(pThread = AfxBeginThread(FileRWProcess, (LPVOID)pOperateOrder)))
+	{
+		bSuccess = FALSE;
+		SAFE_DELETE(pOperateOrder->nIndex);
+		SAFE_DELETE(pOperateOrder);
+	}
+	return bSuccess;
+
+}
+
+void CMainFrame::OnFileSave(BYTE nFlag)
+{
+	UINT i(1);
+	CString str;
+	CStopWatch sw;
+	// 	str.Format(_T("保存模板耗时：%.1f 微秒"),sw.GetTimeSpan());
+	m_pDoc->LoadPrjData(m_pDoc->m_szCurParamName, FALSE);
+	m_pDoc->m_cParam.DefaultProjectName = m_pDoc->m_szCurParamName;
+	// 	str.Format(_T("保存二进制文件耗时：%.1f 微秒"), sw.GetTimeSpan());
+	// 	pFrame->ShowPopup(str,1,5);
+	m_pDoc->SaveParameter();
+	// 	str.Format(_T("保存ini文件耗时：%.1f 微秒"), sw.GetTimeSpan());
+	// 	pFrame->ShowPopup(str);
+	theApp.m_bNeedSave = FALSE;
 }
 
 

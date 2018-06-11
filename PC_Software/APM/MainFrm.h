@@ -83,6 +83,7 @@ public:
 	BOOL						m_bIsPowerOn;
 	BOOL						m_bSwiftMode;
 	BOOL						m_bLearningAlive;
+	BOOL						m_bFileThreadAlive;
 	BOOL						m_bImgProcessAlive;
 	BOOL						m_bSalveThreadAlive[2];
 	BOOL						m_nBondAlarm;
@@ -196,6 +197,7 @@ public:
 	BOOL StartReturnHome();
 	BOOL StartPolling();
 	BOOL StartAuto(BOOL bEnable = FALSE);//
+	BOOL StartTemplateRW(BOOL bSave = TRUE,BYTE nMode=0);//
 	BOOL StartManualRunThread(UINT nWP, UINT nIndex);
 	BOOL StartSlaveThread(UINT nWP, UINT nIndex);
 	BOOL StartLearning(UINT nIndex, Image* mask=NULL);
@@ -207,6 +209,7 @@ protected:
 	static UINT _cdecl AutoThread(LPVOID lpParam);
 	static UINT _cdecl SlaveThread(LPVOID lpParam);
 	static UINT _cdecl LearningProcess(LPVOID lpParam);
+	static UINT _cdecl FileRWProcess(LPVOID lpParam);
 	static UINT _cdecl ImgProcessThread(LPVOID lpParam);
 
 // ÖØÐ´
@@ -248,6 +251,7 @@ protected:
 	afx_msg LRESULT OnCommRecvString(WPARAM wString, LPARAM lLength);
 
 public:
+	afx_msg void OnFileSave(BYTE nFlag=0);
 	afx_msg void ResetSts();
 	afx_msg void OnViewCCD(UINT idCtl);
 	afx_msg void OnOperationMode(UINT idCtl);

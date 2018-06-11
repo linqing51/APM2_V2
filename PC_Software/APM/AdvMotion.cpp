@@ -368,7 +368,7 @@ int CAdvMotion::GetCurPos(UINT AxisNum,double &dPosition)//AxisNum:1-Öá1,2-Öá2¡­
 				return -1;
 			}
 			float diff = fabs(m_dAxisCurPos[i] - Readpositon);
-			if (diff*m_nAxisResolution[i] > 10)
+			if (diff*m_nAxisResolution[i] > 1.5)
 			{
 				m_dAxisCurPos[i] = Readpositon;
 				nChange |= (1 << i);
@@ -671,7 +671,7 @@ BOOL CAdvMotion::CheckMotionDone(BYTE AxisNum, UINT nWaitTime /*= 5000*/)
 	for (j = 0; j < nWaitTime/10; j++)
 	{
 		Sleep(10);
-		for (int k=0; k < m_ulAxisCount;k++)
+		for (UINT k=0; k < m_ulAxisCount;k++)
 		{
 			if ((1 << k)&m_nAxisUsed&AxisNum&(~nInp)){
 

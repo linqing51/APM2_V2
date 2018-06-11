@@ -240,7 +240,6 @@ LRESULT CMainCtrlDlg::OnUpdateDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 				bsts = m_pStatusdata_right.at(i);
 			else
 				bsts = m_pStatusdata_left.at(i);
-			m_plStatus.at(i)->FlashBackground(bsts & 0x01);
 			switch (bsts >> 1)
 			{
 			case 0://初始
@@ -261,6 +260,7 @@ LRESULT CMainCtrlDlg::OnUpdateDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 				break;
 			}
 			m_plStatus.at(i)->SetBkColor(crbk);
+			m_plStatus.at(i)->FlashBackground(bsts & 0x01);
 			i++;
 		} while ((i < num) && (lParam >= MAX_ProductNumber || lParam >= num));
 		break;
@@ -356,7 +356,9 @@ void CMainCtrlDlg::OnBnClickedButtonPushBall(UINT idCtl)
 		}
 		break;
 	}
-	SetTimer(0, 500, NULL);
+	UINT n=SetTimer(1, 500, NULL);
+	if (n ^ 1)
+		AfxMessageBox(_T("手动操作:定时器1启动异常"));
 
 }
 
@@ -463,7 +465,7 @@ void CMainCtrlDlg::OnTimer(UINT_PTR nIDEvent)
 	static int num(4);
 	switch (nIDEvent)
 	{
-	case 0:
+	case 1:
 		if (!num||pFrame->m_IoCtrller.m_bInput[pFrame->m_pDoc->m_cParam.In_PLC_Input[0]])
 		{
 			if (!pFrame->m_IoCtrller.m_bInput[pFrame->m_pDoc->m_cParam.In_PLC_Input[0]])
@@ -477,8 +479,6 @@ void CMainCtrlDlg::OnTimer(UINT_PTR nIDEvent)
 		}else
 			num--;
 
-		break;
-	case 1:
 		break;
 	case 2:
 		break;

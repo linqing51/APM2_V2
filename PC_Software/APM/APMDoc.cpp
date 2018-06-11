@@ -34,7 +34,7 @@ END_MESSAGE_MAP()
 CAPMDoc::CAPMDoc()
 {
 	// TODO:  在此添加一次性构造代码
-
+	m_szCurParamName = _T("未加载");
 	GetCurrentPath();
 	CreatePrjFolders(_T("Defaults"));
 	m_cListPrjName.RemoveAll();
@@ -292,7 +292,7 @@ BOOL CAPMDoc::CreateNewPrj(LPCTSTR lpPrjName)
 			return FALSE;
 		m_cListPrjName.AddTail(CString(lpPrjName));
 		LoadPrjData(lpPrjName, FALSE);
-		m_cParam.DefaultProjectName = lpPrjName;
+// 		m_cParam.DefaultProjectName = lpPrjName;
 		m_szCurParamName = lpPrjName;
 		bSuccess = TRUE;
 	}
@@ -321,9 +321,9 @@ BOOL CAPMDoc::PrjRename(LPCTSTR lpPrjName, LPCTSTR lpNewPrjName)
 
 		m_cListPrjName.RemoveAt(pos);
 		m_cListPrjName.AddTail(CString(lpNewPrjName));
-		if (m_cParam.DefaultProjectName == lpPrjName)
+		if (m_szCurParamName == lpPrjName)
 		{
-			m_cParam.DefaultProjectName = lpNewPrjName;
+// 			m_cParam.DefaultProjectName = lpNewPrjName;
 			m_szCurParamName = lpNewPrjName;
 		}
 		bSuccess = TRUE;
@@ -394,6 +394,10 @@ BOOL CAPMDoc::LoadPrjData(LPCTSTR lpszFileName, BOOL bIn_Out)
 void CAPMDoc::OnFileSave()
 {
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
+	pFrame->StartTemplateRW();
+
+
+	/*
 	UINT i(0);
 	CString str;
 	CStopWatch sw;
@@ -427,6 +431,7 @@ void CAPMDoc::OnFileSave()
 // 	str.Format(_T("保存ini文件耗时：%.1f 微秒"), sw.GetTimeSpan());
 // 	pFrame->ShowPopup(str);
 	theApp.m_bNeedSave = FALSE;
+	*/
 }
 
 void CAPMDoc::OnFileSaveAs()

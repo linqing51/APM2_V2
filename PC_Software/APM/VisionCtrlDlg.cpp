@@ -154,6 +154,7 @@ LRESULT CVisionCtrlDlg::OnUpdateDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/
 
 		m_nTMContrast = pFrame->m_pDoc->m_cParam.PrjCfg.tTemplateArry[m_nCurrentTM].nContrast;
 		m_nTMScore = pFrame->m_pDoc->m_cParam.PrjCfg.tTemplateArry[m_nCurrentTM].nScore;
+		UpdateData(FALSE);
 		break;
 	case 4:
 		pCombox = (CBCGPComboBox*)GetDlgItem(IDC_COMBO_SS_TYPE);

@@ -86,7 +86,9 @@ BOOL CIOStatusDlg::OnInitDialog()
 	m_hRedBitmap = pStatic->GetBitmap();
 	pStatic = (CStatic*)GetDlgItem(IDC_PICT00);
 	m_hGreenBitmap = pStatic->GetBitmap();
-	SetTimer(1, 1000, NULL);
+	UINT n=SetTimer(1, 1000, NULL);
+	if (n ^ 1)
+		AfxMessageBox(_T("IO 状态窗:定时器1启动异常"));
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
 }

@@ -126,8 +126,8 @@ CLabel::CLabel()
 
 	m_crHiColor =		0;
 	m_crLoColor	=		0;
-
-	m_bTimer =			FALSE;
+	m_nTimerID = 0;
+// 	m_bTimer = FALSE;
 	m_bState =			FALSE;
 	m_bTransparent =	FALSE;
 	m_Link =			LinkNone;
@@ -259,7 +259,11 @@ void CLabel::OnPaint()
 	if (!m_bTransparent)
 	{
 		pDCMem = new CDC;
-		VERIFY(pDCMem->CreateCompatibleDC(&dc));
+		if (!pDCMem->CreateCompatibleDC(&dc))
+		{
+			DWORD n = GetLastError();
+			TRACE1("CreateCompatibleDC ERROR:%X\r\n",n);
+		}
 		if (!pDCMem->m_hDC)
 		{
 			delete pDCMem;
@@ -292,12 +296,18 @@ void CLabel::OnPaint()
 					br.Attach(m_hBackBrush);
 				else
 					br.Attach(m_hwndBrush);
-			}else
-				br.CreateSolidBrush(m_crLoColor ^ 0xffffff);
-					
-			pDCMem->FillRect(rc,&br);
+				pDCMem->FillRect(rc, &br);
 
-			br.Detach();
+				br.Detach();
+			}
+			else
+			{
+				br.CreateSolidBrush(m_crLoColor ^ 0xffffff);
+
+				pDCMem->FillRect(rc, &br);
+
+				br.DeleteObject();
+			}
 		}
 		else // Gradient Fill
 		{
@@ -413,6 +423,8 @@ void CLabel::OnPaint()
 		dc.BitBlt(0,0,rc.Width(),rc.Height(),pDCMem,0,0,SRCCOPY);
 		// continue DC restore 
 		pDCMem->SelectObject ( pOldBitmap ) ;
+		bmp.DeleteObject();
+		pDCMem->DeleteDC();
 		delete pDCMem;
 	}
 }
@@ -438,16 +450,11 @@ void CLabel::OnPaint()
 //////////////////////////////////////////////////////////////////////////
 void CLabel::OnTimer(UINT_PTR nIDEvent) 
 {
-	switch (nIDEvent)
+	if (m_nTimerID&&nIDEvent == m_nTimerID)
 	{
-	case 1:
 		m_bState = !m_bState;
 
 		UpdateSurface();
-		if (!m_bTimer)
-			KillTimer(nIDEvent);
-	default:
-		break;
 	}
 	CBCGPStatic::OnTimer(nIDEvent);
 }
@@ -809,12 +816,14 @@ CLabel& CLabel::SetBkColor(COLORREF crBkgnd, COLORREF crBkgndHigh, BackFillMode 
 	m_fillmode = mode;
 
 	if (m_hBackBrush)
+	{
 		::DeleteObject(m_hBackBrush);
-
+		m_hBackBrush = NULL;
+	}
 	
 	if (m_fillmode == Normal)
 		m_hBackBrush = ::CreateSolidBrush(crBkgnd);
-	if (bRepaint)
+	if (bRepaint/*&&!m_nTimerID*/)
 		UpdateSurface();
 
 	return *this;
@@ -872,23 +881,24 @@ CLabel& CLabel::SetFontName(const CString& strFont, BYTE byCharSet /* Default = 
 CLabel& CLabel::FlashText(BOOL bActivate)
 {
 
-	if (m_bTimer)
-		KillTimer(1);
-
+// 	if (m_bTimer)
+// 		KillTimer(m_nTimerID);
 	if (bActivate)
 	{
 		m_bState = FALSE;
 		
-		m_bTimer = TRUE;
-		
-		SetTimer(1,500,NULL);
-
+		if (!m_nTimerID)
+			m_nTimerID = SetTimer(1, 500, NULL);
 		m_Type = Text;
 	}
 	else
 	{
 		m_Type = None; // Fix
-		m_bTimer = FALSE;
+		if (m_nTimerID)
+		{
+			KillTimer(m_nTimerID);
+			m_nTimerID = 0;
+		}
 	}
 	return *this;
 }
@@ -914,22 +924,27 @@ CLabel& CLabel::FlashText(BOOL bActivate)
 CLabel& CLabel::FlashBackground(BOOL bActivate)
 {
 
-	if (m_bTimer)
-		KillTimer(1);
+// 	if (m_bTimer)
+// 		KillTimer(1);
 
 	if (bActivate)
 	{
 		m_bState = FALSE;
 
-		m_bTimer = TRUE;
-		SetTimer(1,500,NULL);
+		if (!m_nTimerID)
+			m_nTimerID = SetTimer(1, 500, NULL);
+			
 
 		m_Type = Background;
 	}
 	else
 	{
 		m_Type = None; // Fix
-		m_bTimer = FALSE;
+		if (m_nTimerID)
+		{
+			KillTimer(m_nTimerID);
+			m_nTimerID = 0;
+		}
 	}
 
 	return *this;

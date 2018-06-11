@@ -62,7 +62,8 @@ protected:
 	LOGFONT			m_lf;
 	CFont			m_font;
 	BOOL			m_bState;
-	BOOL			m_bTimer;
+	UINT			m_nTimerID;
+// 	BOOL			m_bTimer;
 	LinkStyle		m_Link;
 	BOOL			m_bTransparent;
 	BOOL			m_bFont3d;

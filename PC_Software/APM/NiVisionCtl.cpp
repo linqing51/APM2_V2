@@ -905,10 +905,10 @@ BOOL CNiVisionCtl::CreateROI(const Image* image, ROI* pRoi, int nSel, UINT nTool
 	imaqGetImageSize(image, &x, &y);
 	imaqMoveWindow(TOOL_WINDOW, imaqMakePoint(x / 4, 10));
 
-	fx = (FLOAT)640 / x;
-	fy = (FLOAT)480 / y;
+	fx = (FLOAT)960 / x;
+	fy = (FLOAT)540 / y;
 	rate = fx < fy ? fx : fy;
-	imaqSetWindowSize(TOOL_WINDOW, 740, 480);
+	imaqSetWindowSize(TOOL_WINDOW, 960, 640);
 
 	imaqZoomWindow2(TOOL_WINDOW, rate, rate, IMAQ_NO_POINT);
 	nSuccess = imaqConstructROI2(image, pRoi, (Tool_enum)nSel, &tooloption, &roiopt, &nok);
@@ -1012,7 +1012,7 @@ PatternMatchReport* CNiVisionCtl::TemplatemSearch(const Image* source, Image* it
 		advancedOptions[i].matchSetupOption = (MatchSetupOption)advOptionsItems[i];
 		advancedOptions[i].value = advOptionsValues[i];
 	}
-	for (i = 0; i <1; i++)
+	for (i = 0; i <3; i++)
 	{
 		int nFind=0;
 		PatternMatchReport* pInfo= NULL;

@@ -163,7 +163,10 @@ void CProjectSettingDlg::OnClickedBtnCreate()
 	{
 		GetDlgItem(IDC_EDIT_NEWPROJECT)->GetWindowText(szNew);
 		if (szNew.TrimRight().IsEmpty())
+		{
+			pFrame->ShowPopup(_T("项目名称不可用!(也不支持特殊符号)"));
 			return;
+		}
 		szNew.TrimLeft();
 		if (CB_ERR != m_cbPrjName.FindString(-1, szNew))
 			pFrame->ShowPopup(_T("项目名称已存在!"));
@@ -177,7 +180,9 @@ void CProjectSettingDlg::OnClickedBtnCreate()
 				if (!pFrame->m_pDoc->CreateNewPrj(szNew))
 				{
 					pFrame->ShowPopup(_T("项目已存在!"));
-				}
+				}else
+					pFrame->ShowPopup(_T("项目添加成功!"));
+
 			}
 			::PostMessage(pFrame->GetSafeHwnd(), WM_USER_UPDATEUI, 2, 0);
 		}
@@ -208,7 +213,6 @@ void CProjectSettingDlg::OnClickedBtnCreate()
 				}
 				m_cbPrjName.DeleteString(m_nCurrentPrjSel);
 				m_cbPrjName.InsertString(m_nCurrentPrjSel, szNew);
-				::PostMessage(theApp.m_pMainWnd->GetSafeHwnd(), WM_USER_UPDATEUI, 2, 0);
 			}
 			::PostMessage(pFrame->GetSafeHwnd(), WM_USER_UPDATEUI, 2, 0);
 		}
@@ -459,6 +463,7 @@ void CProjectSettingDlg::OnBnClickedButtonReload()
 	pFrame->m_pDoc->LoadPrjData(prjname);
 	PostMessage(WM_USER_UPDATEUI, 2, 1);
 	::PostMessage(pFrame->GetSafeHwnd(), WM_USER_UPDATEUI, 2, 0);
+	pFrame->StartTemplateRW(FALSE,1);//仅加载模板
 	i = pFrame->DownPlcConf();
 	CString str[] = { _T("能量、气压;"), _T("无球报警数;"), _T("清洗能量;"), _T("落球气压上升时间;"), _T("出球气压下降时间;"), _T("激光时间;"), _T("") };
 	if (i)
@@ -489,8 +494,8 @@ void CProjectSettingDlg::OnBnClickedButtonReload()
 	if (szNew == _T("确认"))
 	{
 		pFrame->ShowWindow(SW_SHOWMAXIMIZED);
-// 		m_btnLoad.SetWindowText(_T("加载"));
-// 		m_btnCreate.SetWindowText(_T("修改"));
+		m_btnLoad.SetWindowText(_T("加载"));
+		m_btnCreate.SetWindowText(_T("修改"));
 		CBCGPDialog::OnCancel();
 	}
 
@@ -507,7 +512,9 @@ BOOL CProjectSettingDlg::OnTransfer(BOOL bDownload)
 		if (pFrame->m_LaserCtrl.SetPowerTime(fWeldingTimes,nCurrentPoint - 1 ))
 		{
 			GetDlgItem(IDC_BUTTON_APPLY)->EnableWindow(FALSE);
-			SetTimer(2, 600, NULL);
+			UINT n=SetTimer(2, 600, NULL);
+			if (n ^ 2)
+				AfxMessageBox(_T("项目参数回读:定时器2启动异常"));
 		}
 		else
 			pFrame->AddedErrorMsg(_T("出光时间写入PLC失败\r\n"));

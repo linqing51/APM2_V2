@@ -123,8 +123,11 @@ BOOL CLaserSettingDlg::OnBnClickedTransfer(BOOL bDownload)
 		if (pFrame->m_LaserCtrl.SetConfigList(fPower, fLaserPressure, nBallPressure[0], nBallPressure[1]) && pFrame->m_LaserCtrl.SetCleanPower(fCleanPower))
 		{
 			GetDlgItem(IDC_BUTTON_APPLY)->EnableWindow(FALSE);
-			SetTimer(2, 1000,NULL);
-		}else
+			UINT n=SetTimer(3, 1000,NULL);
+			if (n ^ 3)
+				AfxMessageBox(_T("激光参数回读:定时器3启动异常"));
+		}
+		else
 			pFrame->AddedErrorMsg(_T("出光参数写入PLC失败\r\n"));
 
 	}
@@ -170,8 +173,12 @@ void CLaserSettingDlg::OnBnClickedButtonBoundHome()
 		pFrame->m_IoCtrller.WriteOutputByBit(pFrame->m_pDoc->m_cParam.Ou_Welding[0], FALSE);
 		pFrame->m_IoCtrller.WriteOutputByBit(pFrame->m_pDoc->m_cParam.Ou_Welding[1], TRUE);
 		GetDlgItem(IDC_BUTTON_BOUND_HOME)->EnableWindow(FALSE);
-		SetTimer(0, 200, NULL);
-		SetTimer(1, 800, NULL);
+		UINT n=SetTimer(1, 200, NULL);
+		if (n ^ 1)
+			AfxMessageBox(_T("碟片回零:定时器1启动异常"));
+		n=SetTimer(2, 800, NULL);
+		if (n ^ 2)
+			AfxMessageBox(_T("碟片回零:定时器2启动异常"));
 	}
 }
 
@@ -249,11 +256,11 @@ void CLaserSettingDlg::OnTimer(UINT_PTR nIDEvent)
 	static int num(100);
 	switch (nIDEvent)
 	{
-	case 0:
+	case 1:
 		pFrame->m_IoCtrller.WriteOutputByBit(pFrame->m_pDoc->m_cParam.Ou_Welding[1], FALSE);
 		KillTimer(nIDEvent);
 		break;
-	case 1:
+	case 2:
 		if (!num || ::WaitForSingleObject(pFrame->m_hBondHomeEnd, 0) == WAIT_OBJECT_0)
 		{
 			GetDlgItem(IDC_BUTTON_BOUND_HOME)->EnableWindow(TRUE);
@@ -268,7 +275,7 @@ void CLaserSettingDlg::OnTimer(UINT_PTR nIDEvent)
 			num--;
 
 		break;
-	case 2:
+	case 3:
 		OnBnClickedTransfer(FALSE);
 		GetDlgItem(IDC_BUTTON_APPLY)->EnableWindow(TRUE);
 		KillTimer(nIDEvent);

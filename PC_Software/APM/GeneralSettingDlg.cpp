@@ -115,18 +115,18 @@ void CGeneralSettingDlg::OnKillFocusCCD_NozzleEdit(UINT idCtl)
 {
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
 	int i;
-	if (IDYES == MessageBox(_T("此参数极其重要，确定更新焊嘴与CCD偏移距离?"), _T("重要提示"), MB_YESNO))
-	{
-		UpdateData();
-	}
-	else
-		UpdateData(FALSE);
+// 	if (IDYES == MessageBox(_T("此参数极其重要，确定更新焊嘴与CCD偏移距离?"), _T("重要提示"), MB_YESNO))
+// 	{
+// 		UpdateData();
+// 	}
+// 	else
+// 		UpdateData(FALSE);
 }
 
 void CGeneralSettingDlg::OnKillFocusOtherEdit(UINT idCtl)
 {
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
-	UpdateData();
+// 	UpdateData();
 	switch (idCtl)
 	{
 	case IDC_EDIT_NOZZLELIFE:
@@ -231,7 +231,9 @@ void CGeneralSettingDlg::OnBnClickedButtonApply()
 		pFrame->m_pDoc->m_cParam.nNozzleLife[1] = nNozzleLife;
 		pFrame->m_pDoc->m_cParam.BallAlarmNum = nBallAlarm;
 		pFrame->m_LaserCtrl.SetNGBallNum(nBallAlarm);
-		SetTimer(2, 500, NULL);
+		UINT n=SetTimer(2, 500, NULL);
+		if (n ^ 2)
+			AfxMessageBox(_T("通用参数回读:定时器2启动异常"));
 	}
 }
 

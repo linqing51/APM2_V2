@@ -23,7 +23,7 @@ CWaiteProcessDlg::~CWaiteProcessDlg()
 void CWaiteProcessDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_ANIMATE, m_wndAnimate);
+// 	DDX_Control(pDX, IDC_ANIMATE, m_wndAnimate);
 	DDX_Control(pDX, IDC_PROGRESS, m_ctlProgress);
 	DDX_Control(pDX, IDC_STATIC_MESSAGE, m_wndTips);
 }

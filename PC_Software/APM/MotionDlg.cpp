@@ -124,7 +124,7 @@ void CMotionDlg::OnBnClickedMove(UINT idCtl)
 		}
 	case IDC_BUTTON_MOVE_RUU:
 		m_nCurrentAxis = 0x11;
-		if (IDNO == MessageBox(_T("确定移动相机轴高度?"), _T("重要提示"), MB_YESNO))
+		if (m_fPace>15&&IDNO == MessageBox(_T("确定移动相机轴高度?"), _T("重要提示"), MB_YESNO))
 			return;
 		break;
 	default:

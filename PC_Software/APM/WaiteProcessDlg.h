@@ -20,7 +20,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
-	CAnimateCtrl m_wndAnimate;
+// 	CAnimateCtrl m_wndAnimate;
 	CProgressCtrl m_ctlProgress;
 	CLabel m_wndTips;
 	virtual BOOL OnInitDialog();
