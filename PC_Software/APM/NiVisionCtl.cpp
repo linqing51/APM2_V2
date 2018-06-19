@@ -288,15 +288,16 @@ BOOL CNiVisionCtl::Camera_Connect(CString szCam)
 	IMAQdxError status = IMAQdxErrorSuccess;
 	UINT nIndex(0);
 	CStringA sztemp = CW2A(szCam);
-	for (nIndex = 0; nIndex<m_nCameraNum; nIndex++)
+	for (BYTE i = 0; i<m_nCameraNum; i++)
 	{
-		if (m_szCameraName.at(nIndex) == sztemp)
+		if (m_szCameraName.at(i) == sztemp)
 		{
-			nIndex ++;
-			break;
+			nIndex = i + 1;
+			continue;
+		    break; 
 		}
 	}
-	if (nIndex&&nIndex < m_nCameraNum+1){
+	if (nIndex&&nIndex < (m_nCameraNum+1)){
 		status = IMAQdxOpenCamera(sztemp, IMAQdxCameraControlModeController, &m_session[nIndex-1]);
 		// 		status = status ? status : IMAQdxConfigureGrab(m_session[nIndex]);
 		// 		status = status ? status : IMAQdxStopAcquisition(m_session[nIndex]);

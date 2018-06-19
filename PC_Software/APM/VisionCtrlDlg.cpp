@@ -558,3 +558,19 @@ void CVisionCtrlDlg::ShowContour(UINT nIndex, int nThreshold, UINT nGap)
 	imaqDispose(roi);
 
 }
+
+
+void CVisionCtrlDlg::OnCancel()
+{
+	// TODO:  在此添加专用代码和/或调用基类
+
+// 	CBCGPDialog::OnCancel();
+}
+
+
+void CVisionCtrlDlg::OnOK()
+{
+	// TODO:  在此添加专用代码和/或调用基类
+
+// 	CBCGPDialog::OnOK();
+}

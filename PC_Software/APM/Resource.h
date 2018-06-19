@@ -64,7 +64,6 @@
 #define IDD_DIALOG_MAIN                 318
 #define IDR_MENU_MAIN                   319
 #define IDD_DIALOG_NEWMAIN              319
-#define IDD_DIALOG_PROJECT_CONFIRM      320
 #define IDD_DIALOG_CJ_SETTING           320
 #define IDB_BITMAP1                     323
 #define IDI_ICON_STOP                   327
@@ -97,7 +96,7 @@
 #define IDC_GROUPBOX30                  1016
 #define IDC_GROUPBOX31                  1017
 #define IDC_BUTTON_GOPOSITION           1017
-#define IDC_EDIT_ERRORLIST				1017
+#define IDC_EDIT_ERRORLIST              1017
 #define IDC_BUTTON_SAVEPOSITION         1018
 #define IDC_STATIC_ERRORLIST            1018
 #define IDC_COMBO_SPACING               1019
@@ -136,7 +135,6 @@
 #define IDC_EDIT_MU_VZVEL               1035
 #define IDC_STATIC_CONTAIN              1036
 #define IDC_EDIT_AU_XVEL                1036
-#define IDC_BUTTON_WORKBENCHLOAD2       1036
 #define IDC_BUTTON_FIXER                1036
 #define IDC_COMBO_JOINT_ORDER           1037
 #define IDC_EDIT_AU_LYVEL               1037
@@ -337,7 +335,6 @@
 #define ID_BUTTON_STOP                  32803
 #define ID_BUTTON_ZOOM                  32805
 #define ID_BUTTON_LED                   32806
-#define ID_32820                        32820
 #define ID_OPTION_RANGING               32821
 
 // Next default values for new objects
@@ -346,7 +343,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        328
 #define _APS_NEXT_COMMAND_VALUE         32822
-#define _APS_NEXT_CONTROL_VALUE         1159
+#define _APS_NEXT_CONTROL_VALUE         1171
 #define _APS_NEXT_SYMED_VALUE           312
 #endif
 #endif

@@ -682,3 +682,11 @@ BOOL CMotionDlg::PreTranslateMessage(MSG* pMsg)
 	return CBCGPDialog::PreTranslateMessage(pMsg);
 }
 
+
+
+void CMotionDlg::OnCancel()
+{
+	// TODO:  在此添加专用代码和/或调用基类
+
+// 	CBCGPDialog::OnCancel();
+}

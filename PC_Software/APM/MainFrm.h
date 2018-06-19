@@ -101,8 +101,8 @@ public:
 	UINT					m_nCurrentVisionCheck[2];
 	UINT					m_nCurrentPin[2];
 	UINT					m_nCurrentRanging[2];
-	BYTE					m_nPinVisionSuccess[2][MAX_ProductNumber][16];
-	double					m_dLaserOffset[2][MAX_ProductNumber][16][3];
+	BYTE					m_nPinVisionSuccess[2][MAX_ProductNumber][MAX_PinNumber];
+	double					m_dLaserOffset[2][MAX_ProductNumber][MAX_PinNumber][3];
 
 	UINT					m_nCameraAlive;
 	double					m_dCenterPosition[2];

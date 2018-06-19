@@ -506,9 +506,8 @@ BOOL CAPMDoc::OpenFileDlg(BOOL bOpen)
 BOOL CAPMDoc::CheckData()
 {
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
-	BOOL bSuccess(TRUE);
-	m_cParam.CheckData();
-	return bSuccess;
+	
+	return m_cParam.CheckData();
 }
 
 void CAPMDoc::Writelog(UINT nIndex, LPCTSTR info)

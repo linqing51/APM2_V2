@@ -273,6 +273,11 @@ BOOL CMachineParam::CheckData()
 		PrjCfg.nPinNum = 1;
 		bSuccess = FALSE;
 	}
+	if (PrjCfg.nPinNum>MAX_PinNumber)
+	{
+		PrjCfg.nPinNum = MAX_PinNumber;
+		bSuccess = FALSE;
+	}
 	if (!PrjCfg.uInspection)
 	{
 		PrjCfg.uInspection = 1;

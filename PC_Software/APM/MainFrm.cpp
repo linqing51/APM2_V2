@@ -152,7 +152,7 @@ CMainFrame::~CMainFrame()
 	SAFE_DELETE(m_pMotionCtrller[1]);
 	CloseHandle(m_hSlaveEvent[0]);
 	CloseHandle(m_hSlaveEvent[1]);
-	for (int i = 0; i < 16;i++)
+	for (int i = 0; i < MAX_PinNumber; i++)
 	{
 		imaqDispose(m_pTemplate[i]);
 		if (i&&i < 9)
@@ -1030,7 +1030,7 @@ BOOL CMainFrame::DownPlcConf()
 				bSuccess |= 8;
 			if (!m_LaserCtrl.SetDroppingTime(m_pDoc->m_cParam.nDroppingTime[1],1 ))
 				bSuccess |= 0x010;
-			for (int i = 0; i < 16; i++)
+			for (int i = 0; i < MAX_PinNumber; i++)
 			{
 				if (!m_LaserCtrl.SetPowerTime(m_pDoc->m_cParam.PrjCfg.PinArray[i].uWeldingTimes /10.0, i))
 					bSuccess |= 1 << (5 + i);
@@ -1094,7 +1094,7 @@ LRESULT CMainFrame::OnUpdateDisplay(WPARAM wParam, LPARAM lParam)
 
 BOOL CMainFrame::LoadTemplate(UINT nIndex, BOOL bSave /*= TRUE*/)
 {
-	if (nIndex > 16 || (bSave&&!m_pTemplate[nIndex]))
+	if (nIndex > MAX_PinNumber || (bSave&&!m_pTemplate[nIndex]))
 		return FALSE;
 	CString sztemp = m_pDoc->m_szCurParamName;
 	if (sztemp == _T(""))
@@ -1131,7 +1131,7 @@ BOOL CMainFrame::CamPosition(UINT nPos, BOOL bWait /*= TRUE*/)
 	ZeroMemory(&tempPoint, sizeof(LaserPoint));
 	UINT nID = nPos >> 4;
 	UINT nCmd = nPos & 0x0f;
-	if (nID >> 1)
+	if (nID >> 1 || m_nCurrentPin[nID] >= MAX_PinNumber)
 		return FALSE;
 	nOrder = m_nCurrentProduct[nID][0] * m_pDoc->m_cParam.PrjCfg.bProductNum[1] + m_nCurrentProduct[nID][1];
 	i = m_pDoc->m_cParam.PrjCfg.PinArray[m_nCurrentPin[nID]].uVisionIndex;
@@ -1240,7 +1240,7 @@ BOOL CMainFrame::ZCheckClimbPos(UINT nPos)
 	int		i(0);
 	UINT nID = nPos >> 4;
 	UINT nCmd = nPos & 0x0f;
-	if (nID >> 1)
+	if (nID >> 1 || m_nCurrentPin[nID] >= MAX_PinNumber)
 		return FALSE;
 	double dCampare;
 	nOrder = m_nCurrentProduct[nID][0] * m_pDoc->m_cParam.PrjCfg.bProductNum[1] + m_nCurrentProduct[nID][1];
@@ -1289,7 +1289,7 @@ BOOL CMainFrame::ZGoPosition(UINT nPos, BOOL bCheck, BOOL bWait)
 	int		i(0);
 	UINT nID = nPos >> 4;
 	UINT nCmd = nPos & 0x0f;
-	if (nID >> 1)
+	if (nID >> 1 || m_nCurrentPin[nID]>=MAX_PinNumber)
 		return FALSE;
 	CString ErrMsg=_T("");
 
@@ -2205,8 +2205,8 @@ UINT CMainFrame::WorkProcess(UINT nWp, UINT nStep)
 				}
 			}
 		}
-		ZeroMemory(m_nPinVisionSuccess[nWp][nCurl], sizeof(BYTE) * 16);
-		ZeroMemory(m_dLaserOffset[nWp][nCurl], sizeof(double) * 48);
+		ZeroMemory(m_nPinVisionSuccess[nWp][nCurl], sizeof(BYTE) * MAX_PinNumber);
+		ZeroMemory(m_dLaserOffset[nWp][nCurl], sizeof(double) * MAX_PinNumber*3);
 		if (SwitchCamera(0, TRUE))
 			nSuccess = StartSlaveThread(nWp, nStep);
 		else
@@ -2316,6 +2316,7 @@ BOOL CMainFrame::StartAuto(BOOL bEnable /*= FALSE*/)
 				AddedErrorMsg(ErrorMsg);
 			}
 			else{
+				m_IoCtrller.WriteOutputByBit(m_pDoc->m_cParam.Ou_Welding[0], TRUE);
 				bResult = TRUE;
 				PostMessage(WM_USER_UPDATEUI, 1, 0);
 
@@ -2323,7 +2324,7 @@ BOOL CMainFrame::StartAuto(BOOL bEnable /*= FALSE*/)
 				m_lQuantityStart = m_pView->m_MainCtrlDlg.m_lQuantity;
 				UINT n=SetTimer(1, 1000, NULL);
 				if (n ^ 1)
-					AfxMessageBox(_T("设备初始化:定时器1启动异常"));
+					AfxMessageBox(_T("定时器1启动异常"));
 			}
 		}
 		else
@@ -3668,7 +3669,7 @@ UINT CMainFrame::ImageProcess(Image* image, BYTE nIndex, BYTE nWP, BYTE nRow, BY
 						m_dLaserOffset[nWP][nOrder][i][0] = (abs(MatchResults.results[0].resultVal.numVal) < 6) ? MatchResults.results[0].resultVal.numVal : 0;
 						m_dLaserOffset[nWP][nOrder][i][1] = (abs(MatchResults.results[1].resultVal.numVal) < 6) ? MatchResults.results[1].resultVal.numVal : 0;
 						m_dLaserOffset[nWP][nOrder][i][2] = 360-MatchResults.results[2].resultVal.numVal;
-						m_pView->m_MainCtrlDlg.OnUpdateSts(nWP, nOrder, CMainCtrlDlg::WELDING_OK << 1, CMainCtrlDlg::ADD_STS);
+						m_pView->m_MainCtrlDlg.OnUpdateSts(nWP, nOrder, CMainCtrlDlg::VISION_OK << 1, CMainCtrlDlg::ADD_STS);
 					}
 					else
 					{
@@ -4414,7 +4415,7 @@ void CMainFrame::AutoCalculatePos1(BYTE nWp)
 		{
 			if ((i | k) == 0)
 				continue;
-			for (j = 0; j < 16; j++)
+			for (j = 0; j < MAX_PinNumber; j++)
 			{
 				if ((i & 0x01)/*&&!PathMode*/)
 				{
@@ -4494,7 +4495,7 @@ UINT _cdecl CMainFrame::FileRWProcess(LPVOID lpParam)
 	{
 		pFrame->m_bFileThreadAlive = TRUE;
 		pFrame->UpdateWaiteProcessDlg(0, _mm_popcnt_u32(pFrame->m_pDoc->m_cParam.PrjCfg.uTemplateSts));
-		for (BYTE i = 0; i < 16; i++)
+		for (BYTE i = 0; i < MAX_PinNumber; i++)
 		{
 			if (pFrame->m_pDoc->m_cParam.PrjCfg.uTemplateSts & (1 << i))
 			{

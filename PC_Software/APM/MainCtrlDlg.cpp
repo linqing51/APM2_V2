@@ -489,7 +489,6 @@ void CMainCtrlDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CMainCtrlDlg::OnBnClickedCheckAppoint()
 {
-	bAppointByMu = TRUE;
 	// TODO:  在此添加控件通知处理程序代码
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
 	BOOL bSuccess(FALSE);
@@ -539,9 +538,9 @@ void CMainCtrlDlg::OnBnClickedCheckAppoint()
 					imaqDispose(pReport);
 				}
 				pFrame->m_nPinVisionSuccess[m_nCurrentWP][nCurl][m_nCurrentPin] = TRUE;
-				pFrame->m_dLaserOffset[m_nCurrentWP][nCurl][m_nCurrentPin][0] += fPt.x;
-				pFrame->m_dLaserOffset[m_nCurrentWP][nCurl][m_nCurrentPin][1] += fPt.y;
-
+				pFrame->m_dLaserOffset[m_nCurrentWP][nCurl][m_nCurrentPin][0] = fPt.x;
+				pFrame->m_dLaserOffset[m_nCurrentWP][nCurl][m_nCurrentPin][1] = fPt.y;
+				bAppointByMu = TRUE;
 			}
 			imaqDispose(pInf);
 
@@ -859,4 +858,20 @@ void CMainCtrlDlg::OnBnClickedButtonFixer()
 			SetDlgItemText(IDC_BUTTON_FIXER, str);
 		}
 	}
+}
+
+
+void CMainCtrlDlg::OnCancel()
+{
+	// TODO:  在此添加专用代码和/或调用基类
+
+// 	CBCGPDialog::OnCancel();
+}
+
+
+void CMainCtrlDlg::OnOK()
+{
+	// TODO:  在此添加专用代码和/或调用基类
+
+// 	CBCGPDialog::OnOK();
 }

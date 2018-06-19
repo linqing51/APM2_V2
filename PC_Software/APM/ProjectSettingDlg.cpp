@@ -114,12 +114,12 @@ BOOL CProjectSettingDlg::OnInitDialog()
 	CString szNew;	// TODO:  在此添加额外的初始化
 	m_ctlCheckSpin.SetBuddy(GetDlgItem(IDC_EDIT_CHECK_ORDER));
 	m_ctlCheckSpin.SetBase(1);
-	m_ctlCheckSpin.SetRange(0, 16);
+	m_ctlCheckSpin.SetRange(0, MAX_PinNumber);
 // 	m_ctlCheckSpin.SetPos(1);
 
 	m_ctlPointSpin.SetBuddy(GetDlgItem(IDC_EDIT_JOINT_ORDER));
 	m_ctlPointSpin.SetBase(1);
-	m_ctlPointSpin.SetRange(1, 16);
+	m_ctlPointSpin.SetRange(1, MAX_PinNumber);
 // 	m_ctlPointSpin.SetPos(1);
 
 	POSITION pos = pFrame->m_pDoc->m_cListPrjName.GetHeadPosition();
@@ -312,9 +312,9 @@ void CProjectSettingDlg::OnKillFocusOrderEdit(UINT idCtl)
 	switch (idCtl)
 	{
 	case IDC_EDIT_VISIONNUM:
-		nNum = nTotalVisionCheck;
+		nNum = (nTotalVisionCheck>MAX_PinNumber) ? MAX_PinNumber : nTotalVisionCheck;
 		UpdateData();
-		if (nTotalVisionCheck > 16 || nTotalVisionCheck == 0)
+		if (nTotalVisionCheck > MAX_PinNumber || nTotalVisionCheck == 0)
 		{
 			nTotalVisionCheck = nNum;
 			UpdateData(FALSE);
@@ -323,9 +323,9 @@ void CProjectSettingDlg::OnKillFocusOrderEdit(UINT idCtl)
 		PostMessage(WM_USER_UPDATEUI, 2, 0);
 		break;
 	case IDC_EDIT_JOINTNUM:
-		nNum = nTotalPoints;
+		nNum = (nTotalPoints>MAX_PinNumber) ? MAX_PinNumber:nTotalPoints;
 		UpdateData();
-		if (nTotalPoints > 16)
+		if (nTotalPoints > MAX_PinNumber)
 		{
 			nTotalPoints = nNum;
 			UpdateData(FALSE);

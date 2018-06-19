@@ -54,4 +54,6 @@ public:
 	afx_msg void OnBnClickedCheckAppoint();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnBnClickedButtonFixer();
+	virtual void OnCancel();
+	virtual void OnOK();
 };

@@ -44,4 +44,6 @@ public:
 	BOOL m_bUseBinary;
 	afx_msg void OnBnClickedCheckContour();
 	afx_msg void OnBnClickedCheckBinary();
+	virtual void OnCancel();
+	virtual void OnOK();
 };
