@@ -170,7 +170,7 @@ BEGIN
         MENUITEM "新建",                          ID_PROJECT_NEW
     END
     MENUITEM SEPARATOR
-    POPUP "试图"
+    POPUP "视图"
     BEGIN
         MENUITEM "定位相机",                        ID_VIEW_TOPCAMERA
         MENUITEM "焊嘴相机",                        ID_VIEW_BOTTOMCAMERA
