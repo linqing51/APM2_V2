@@ -114,7 +114,7 @@ void CGeneralSettingDlg::OnKillFocusIntensityEdit(UINT idCtl)
 void CGeneralSettingDlg::OnKillFocusCCD_NozzleEdit(UINT idCtl)
 {
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
-	int i;
+//	int i;
 // 	if (IDYES == MessageBox(_T("此参数极其重要，确定更新焊嘴与CCD偏移距离?"), _T("重要提示"), MB_YESNO))
 // 	{
 // 		UpdateData();

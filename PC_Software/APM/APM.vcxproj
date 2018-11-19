@@ -212,6 +212,7 @@
     <ClInclude Include="APM.h" />
     <ClInclude Include="APMDoc.h" />
     <ClInclude Include="APMView.h" />
+    <ClInclude Include="B.h" />
     <ClInclude Include="ControlView.h" />
     <ClInclude Include="ErrorInfoDlg.h" />
     <ClInclude Include="GeneralSettingDlg.h" />
@@ -238,6 +239,7 @@
     <ClCompile Include="APM.cpp" />
     <ClCompile Include="APMDoc.cpp" />
     <ClCompile Include="APMView.cpp" />
+    <ClCompile Include="B.cpp" />
     <ClCompile Include="ControlView.cpp" />
     <ClCompile Include="ErrorInfoDlg.cpp" />
     <ClCompile Include="GeneralSettingDlg.cpp" />
@@ -285,6 +287,7 @@
     <Image Include="res\APMDoc.ico" />
     <Image Include="res\DIback.bmp" />
     <Image Include="res\Error.bmp" />
+    <Image Include="res\gree.ico" />
     <Image Include="res\ledHigh.bmp" />
     <Image Include="res\ledLow.bmp" />
     <Image Include="res\ribbonfilelarge48.png" />

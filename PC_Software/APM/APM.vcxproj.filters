@@ -90,6 +90,9 @@
     <ClInclude Include="LogHelper.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="B.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="APM.cpp">
@@ -179,6 +182,9 @@
     <ClCompile Include="LogHelper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="B.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="APM.rc">
@@ -228,6 +234,9 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="res\Stop.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\gree.ico">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

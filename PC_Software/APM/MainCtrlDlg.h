@@ -21,7 +21,7 @@ public:
 	UINT						m_nCurrentProduct[2];
 	UINT						m_nCurrentPin;
 	CLabel						m_lStatus[6];
-	CLabel						m_nStatus[3];
+    CLabel						m_nStatus[3];
 	ULONG						m_lQuantity;
 	std::vector<BYTE>				m_pStatusdata_left;
 	std::vector<BYTE>				m_pStatusdata_right;
@@ -56,4 +56,7 @@ public:
 	afx_msg void OnBnClickedButtonFixer();
 	virtual void OnCancel();
 	virtual void OnOK();
+	UINT m_total;
+	UINT m_cur;
+	
 };

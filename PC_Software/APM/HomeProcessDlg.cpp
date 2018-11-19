@@ -54,7 +54,7 @@ BOOL CHomeProcessDlg::OnInitDialog()
 	// 	::SetWindowPos(this->m_hWnd, HWND_TOP, 0, 0, 640, 480, SWP_NOZORDER);
 	CenterWindow();
 	// TODO:  在此添加额外的初始化
-// 	m_wndAnimate.Open(IDR_ANIMATION);
+ 	//m_wndAnimate.Open(IDR_ANIMATION);
 	
 	m_wndAnimate.Open(pFrame->m_pDoc->m_szCurrentFolder+_T("APM.Bin"));
 	m_wndAnimate.Play(0, -1, -1);

@@ -51,6 +51,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CBCGPFrameWnd)
 	ON_COMMAND(ID_BUTTON_ZOOM, &CMainFrame::OnButtonZoom)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_ZOOM, &CMainFrame::OnUpdateButtonZoom)
 	ON_UPDATE_COMMAND_UI(ID_INDICATOR_LABEL, &CMainFrame::OnUpdateIndicatorLabel)
+	
+	
+
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -209,7 +212,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;      // 未能创建
 	}
 	m_wndStatusBar.SetPaneTextColor(1, CBCGPColor::DarkRed);
-	m_wndStatusBar.SetPaneWidth(1,130);
+	
+	m_wndStatusBar.SetPaneWidth(1,300);
+	
 	m_wndToolBar.EnableTextLabels(TRUE);
 	m_wndToolBar.SetButtonText(6, _T("适应窗口"));
 	
@@ -1832,8 +1837,31 @@ LRESULT CMainFrame::OnUpdateDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 
 		break;
 	case 5:
-		str.Format(_T("气压实时：%d"),lParam);
-		m_wndStatusBar.SetPaneText(1, str);
+		if (lParam==1)
+		{
+			str.Format(_T("气压实时：%d"), m_LaserCtrl.GetLaserPressure());
+			
+			m_wndStatusBar.SetPaneText(1, str);
+		}
+		if (lParam==2)
+		{
+			
+
+		}
+		if (lParam==3)
+		{
+			
+			
+			
+		}
+		
+		//str.Format(_T("气压实时：%d"),lParam);
+		//m_wndStatusBar.SetPaneText(1, str);
+		//m_wndStatusBar.SetPaneWidth(2, 600);
+		//m_wndStatusBar.SetPaneText(2,_T("激光状态"));
+		//m_wndStatusBar.SetIcon(AfxGetApp()->LoadIconW(IDI_ICON_STOP), FALSE);
+		//m_wndStatusBar.SetPaneText(3, _T("激光状态"));
+		//m_wndStatusBar.SetPaneIcon(2, AfxGetApp()->LoadIconW(IDI_ICON_STOP));
 		break;
 	case 6:
 
@@ -3586,7 +3614,9 @@ BOOL CMainFrame::PollingHandle()
 			m_hBondHomeEnd.SetEvent();
 	}
 	if (::IsWindow(m_hWnd))
-		PostMessage(WM_USER_UPDATEUI,5,m_LaserCtrl.GetLaserPressure());
+		PostMessage(WM_USER_UPDATEUI, 5, 1);
+		::PostMessage(m_pView->m_MainCtrlDlg.m_hWnd, WM_USER_UPDATEUI, 9, 0);
+	
 	return 0;
 }
 

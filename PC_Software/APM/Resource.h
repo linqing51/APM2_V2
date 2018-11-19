@@ -67,6 +67,8 @@
 #define IDD_DIALOG_CJ_SETTING           320
 #define IDB_BITMAP1                     323
 #define IDI_ICON_STOP                   327
+#define IDB_BITMAP2                     328
+#define IDD_DIALOG1                     330
 #define IDC_RADIO_LEFT                  1000
 #define IDC_RADIO_RIGHT                 1001
 #define IDC_COMBO_ORDER_TM              1002
@@ -240,6 +242,8 @@
 #define IDC_BUTTON_COUNTER_N            1088
 #define IDC_CHECK_IDLING                1089
 #define IDC_BUTTON_AUTO                 1090
+#define IDC_STATIC_LIFECYCLE2           1090
+#define IDC_STATIC_QUANTITY2            1090
 #define IDC_BUTTON_STOP                 1091
 #define IDC_STATIC_ACTUAL_X             1091
 #define IDC_STATIC_ACTUAL_LY            1092
@@ -319,6 +323,8 @@
 #define IDC_EDIT_RANGING5_X             1167
 #define IDC_EDIT_RANGING5_Y             1168
 #define IDC_EDIT_RANGING5_Z             1169
+#define IDC_EDIT1                       1171
+#define IDC_EDIT2                       1172
 #define ID_OPTION_GENERALSETTING        32768
 #define ID_OPTION_HOMINGSETTING         32769
 #define ID_OPTION_LASERSETTING          32770
@@ -341,9 +347,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        328
+#define _APS_NEXT_RESOURCE_VALUE        331
 #define _APS_NEXT_COMMAND_VALUE         32822
-#define _APS_NEXT_CONTROL_VALUE         1171
+#define _APS_NEXT_CONTROL_VALUE         1172
 #define _APS_NEXT_SYMED_VALUE           312
 #endif
 #endif

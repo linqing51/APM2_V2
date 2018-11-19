@@ -168,9 +168,61 @@ BOOL CPLCModbus::GetLaserRDY()
 BOOL CPLCModbus::SetLaserRDY(BOOL bEnable)
 {
 	UCHAR arg(bEnable);
-	if (!m_mb || !CoilRW(m_nDataAddress[0] + 47, &arg, 1, WRIT))//MR215
+	if (!m_mb || !CoilRW(m_nDataAddress[0] + 48, &arg, 1, WRIT))//MR215
 		return FALSE;
 	return TRUE;
+
+}
+
+BOOL CPLCModbus::IsEnable()
+{
+
+	UCHAR arg(0);
+	if (!m_mb || !CoilRW(m_nDataAddress[0] + 48, &arg))//MR300
+		return FALSE;
+	return arg;
+
+
+}
+
+BOOL CPLCModbus::IsErroy()
+{
+
+
+	UCHAR arg(0);
+	if (!m_mb || !CoilRW(m_nDataAddress[0] + 49, &arg))//MR301
+		return FALSE;
+	return arg;
+
+}
+
+BOOL CPLCModbus::IsPowering()
+{
+
+	UCHAR arg(0);
+	if (!m_mb || !CoilRW(m_nDataAddress[0] + 50, &arg))//MR302
+		return FALSE;
+	return arg;
+
+
+}
+
+BOOL CPLCModbus::IsLasering()
+{
+	UCHAR arg(0);
+	if (!m_mb || !CoilRW(m_nDataAddress[0] + 51, &arg))//MR303
+		return FALSE;
+	return arg;
+
+}
+
+BOOL CPLCModbus::IsWarning()
+{
+
+	UCHAR arg(0);
+	if (!m_mb || !CoilRW(m_nDataAddress[0] + 52, &arg))//MR304
+		return FALSE;
+	return arg;
 
 }
 
@@ -183,10 +235,12 @@ BOOL CPLCModbus::SetTriggerCleanMode()
 
 }
 
+
 //寄存器类型
 UINT CPLCModbus::GetAlarm()//0:设备复位;1:无球;2:堵球;3:清洗;4:;5:;7:;
 {
 	USHORT arg(0);
+
 	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 800, &arg))//DM800
 		return FALSE;
 // 	for (int i = 1; i < 8; i++)
@@ -354,6 +408,27 @@ BOOL CPLCModbus::GetPLCRDY()
 	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 900, &arg))//DM412
 		return FALSE;
 	return arg==0x90d;
+}
+
+UINT CPLCModbus::GetTotalBalls(UINT nIndex /* = 0 */)
+{
+	USHORT arg[2] = { 0, 0 };
+	UINT nResult;
+	if (!m_mb || !RegisterRW(m_nDataAddress[1]  + nIndex * 2, arg, 2))//DM0
+		return FALSE;
+	nResult = arg[0] | (arg[1] << 16);
+	return nResult;
+}
+
+UINT CPLCModbus::GetCurBalls(UINT nIndex /* = 0 */)
+{
+
+	USHORT arg[2] = { 0, 0 };
+	UINT nResult;
+	if (!m_mb || !RegisterRW(m_nDataAddress[1] + 2+nIndex * 2, arg, 2))//DM2
+		return FALSE;
+	nResult = arg[0] | (arg[1] << 16);
+	return nResult;
 }
 
 /*

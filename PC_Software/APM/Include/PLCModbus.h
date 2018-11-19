@@ -29,7 +29,11 @@ public:
 	BOOL GetLaserRDY();
 	BOOL GetPLCRDY();
 	BOOL SetLaserRDY(BOOL bEnable = TRUE);
-
+	BOOL IsEnable();
+	BOOL IsErroy();
+	BOOL IsPowering();
+	BOOL IsLasering();
+	BOOL IsWarning();
 
 	//参数 寄存器
 	UINT GetAlarm();
@@ -53,6 +57,9 @@ public:
 
 	BOOL GetConfigList(FLOAT& nPower, FLOAT& Pressure, UINT& ndetect_up, UINT& ndetect_low);//410-418
 	BOOL SetConfigList(FLOAT nPower, FLOAT Pressure, UINT ndetect_up, UINT ndetect_low);//410-418
+
+	UINT GetTotalBalls(UINT nIndex = 0);
+	UINT GetCurBalls(UINT nIndex = 0);
 	/*
 	//过时
 	BOOL GetTestModeSts();

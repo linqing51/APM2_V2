@@ -5,6 +5,7 @@
 #include "APM.h"
 #include "MainCtrlDlg.h"
 #include "MainFrm.h"
+#include "modbus.h"
 
 
 // CMainCtrlDlg 对话框
@@ -16,6 +17,8 @@ CMainCtrlDlg::CMainCtrlDlg(CWnd* pParent /*=NULL*/)
 , m_nCurrentWP(0)
 , bIdling(TRUE)
 , bAppointByMu(FALSE)
+, m_total()
+, m_cur()
 {
 // 	EnableVisualManagerStyle(TRUE, TRUE);
 // 	EnableLayout(FALSE);
@@ -23,6 +26,7 @@ CMainCtrlDlg::CMainCtrlDlg(CWnd* pParent /*=NULL*/)
 	m_nCurrentPin = 0;
 	m_nCurrentProduct[0] = 0;
 	m_nCurrentProduct[1] = 0;
+	
 }
 
 CMainCtrlDlg::~CMainCtrlDlg()
@@ -37,11 +41,14 @@ void CMainCtrlDlg::DoDataExchange(CDataExchange* pDX)
 	for (int i = 0; i < 3; ++i)
 	{
 		DDX_Control(pDX, IDC_STATIC_LASERSTS + i, m_lStatus[i]);
-		DDX_Control(pDX, IDC_STATIC_CIRCLETIME + i, m_nStatus[i]);
+		//DDX_Control(pDX, IDC_STATIC_CIRCLETIME + i, m_nStatus[i]);
 	}
 	DDX_Control(pDX, IDC_STATIC_BUSY, m_lStatus[3]);
 
 	DDX_Check(pDX, IDC_CHECK_IDLING, bIdling);
+	DDX_Text(pDX, IDC_STATIC_QUANTITY2, m_total);
+	DDX_Text(pDX, IDC_STATIC_LIFECYCLE, m_cur);
+	
 }
 
 
@@ -84,6 +91,9 @@ BOOL CMainCtrlDlg::OnInitDialog()
 	CBCGPDialog::OnInitDialog();
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
 	m_lStatus[2].SetBkColor(CBCGPColor::LightGreen);
+	
+	
+	//UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常:  OCX 属性页应返回 FALSE
 }
@@ -173,6 +183,7 @@ LRESULT CMainCtrlDlg::OnUpdateDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 		
 		str.Format(_T("%5.2f s"), (double)lParam/1000.0);
 		m_nStatus[0].SetText(str);
+		
 		break;
 	case 4:
 		if (lParam)
@@ -276,6 +287,11 @@ LRESULT CMainCtrlDlg::OnUpdateDlg(WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 			m_lStatus[2].SetBkColor(CBCGPColor::LightGreen);
 		}
 
+		break;
+	case 9:
+		m_cur = pFrame->m_LaserCtrl.GetCurBalls();
+		m_total = pFrame->m_LaserCtrl.GetTotalBalls();
+		UpdateData(FALSE);
 		break;
 	}
 	return 0;
@@ -471,7 +487,9 @@ void CMainCtrlDlg::OnTimer(UINT_PTR nIDEvent)
 			if (!pFrame->m_IoCtrller.m_bInput[pFrame->m_pDoc->m_cParam.In_PLC_Input[0]])
 				pFrame->AddedErrorMsg(_T("动作超时\r\n"));
 			pFrame->m_LaserCtrl.SetBallRDY(FALSE);
+			//
 			pFrame->m_IoCtrller.WriteOutputByBit(pFrame->m_pDoc->m_cParam.Ou_Welding[2], FALSE);
+			//
 			GetDlgItem(IDC_BUTTON_PUSH_BALL)->EnableWindow(TRUE);
 			GetDlgItem(IDC_BUTTON_SHOT)->EnableWindow(TRUE);
 			num = 4;
